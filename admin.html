@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top16 - Admin Dashboard</title>
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen relative">
+
+    <!-- ========================================== -->
+    <!-- GATEKEEPER SIGN-IN & PASSCODE MODAL        -->
+    <!-- ========================================== -->
+    <div id="gatekeeper-modal" class="fixed inset-0 z-50 bg-gray-900/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl border border-gray-200 max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-black text-gray-900 tracking-tight mb-1">Admin Authorization Required</h2>
+            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to open the command center spreadsheet.</p>
+            
+            <form id="gatekeeper-form" onsubmit="verifyAdminPasscode(event)" class="text-left space-y-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Scout / Admin Name</label>
+                    <input type="text" id="gatekeeper-scout-name" placeholder="Coach Name" required autocomplete="name"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Passcode</label>
+                    <input type="password" id="gatekeeper-passcode-input" placeholder="••••" autocomplete="current-password" required
+                        class="w-full text-center text-xl font-black tracking-widest bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900">
+                </div>
+                
+                <p id="gatekeeper-error-msg" class="text-xs text-rose-600 font-bold hidden text-center pt-1">⚠️ Access Denied. Incorrect Passcode.</p>
+                
+                <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white font-bold p-3 rounded-xl transition cursor-pointer text-sm shadow-md pt-2">
+                    Unlock Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (Initially blurred out until verified) -->
+    <div id="admin-content-blur-wrapper" class="max-w-5xl mx-auto p-4 pb-24 filter blur-sm pointer-events-none transition-all duration-500">
+        
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-200 pb-4 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 tracking-tight">🏆 Top16 Command Center</h1>
+                <p class="text-xs text-gray-500">Active Session: <span id="active-admin-display" class="font-bold text-gray-700">Connecting...</span></p>
+            </div>
+            
+            <!-- ACTION BUTTONS -->
+            <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                <a href="index.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    </svg>
+                    Go to Evaluation Page
+                </a>
+
+                <button onclick="exportToExcel()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl transition duration-150 shadow-sm shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Export to Excel (.csv)
+                </button>
+            </div>
+        </header>
+
+        <!-- ANALYTICS CARDS -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <span class="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Total Logs</span>
+                <span id="stat-total-evals" class="text-2xl font-black text-gray-900">0</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <span class="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Unique Players</span>
+                <span id="stat-unique-players" class="text-2xl font-black text-emerald-600">0</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <span class="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Active Reviewers</span>
+                <span id="stat-total-scouts" class="text-2xl font-black text-blue-600">0</span>
+            </div>
+        </div>
+
+        <!-- SEARCH BAR & GROUPING CONTROLS -->
+        <div class="flex flex-col md:flex-row gap-3 mb-4">
+            <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-xs flex items-center gap-2 flex-1">
+                <span class="text-gray-400 pl-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-51.67-51.67m7.71 11.42a8.25 8.25 0 1 1-16.5 0 8.25 8.25 0 0 1 16.5 0Z" />
+                    </svg>
+                </span>
+                <input type="text" id="admin-search-input" oninput="applyFiltersAndSort()" placeholder="Filter evaluations by keyword..." class="w-full text-sm bg-transparent focus:outline-none text-gray-900 font-medium">
+            </div>
+
+            <div class="bg-gray-200 p-1 rounded-xl flex items-center gap-1 text-xs font-bold shadow-inner">
+                <button onclick="setGrouping('none')" id="group-btn-none" class="group-btn px-3 py-2 rounded-lg transition cursor-pointer bg-white text-gray-900 shadow-xs">Flat List</button>
+                <button onclick="setGrouping('evaluator')" id="group-btn-evaluator" class="group-btn px-3 py-2 rounded-lg transition text-gray-500 hover:text-gray-900 cursor-pointer">By Scout</button>
+                <button onclick="setGrouping('rating')" id="group-btn-rating" class="group-btn px-3 py-2 rounded-lg transition text-gray-500 hover:text-gray-900 cursor-pointer">By Score</button>
+                <button onclick="setGrouping('playerNumber')" id="group-btn-playerNumber" class="group-btn px-3 py-2 rounded-lg transition text-gray-500 hover:text-gray-900 cursor-pointer">By Player ID</button>
+            </div>
+        </div>
+
+        <!-- MASTER TABLE VIEW -->
+        <div id="dashboard-view-container" class="space-y-4"></div>
+    </div>
+
+    <!-- TEMPLATE COMPONENT: FLAT SPREADSHEET STRUCT -->
+    <template id="spreadsheet-template">
+        <main class="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-400 text-[10px] uppercase font-bold tracking-wider select-none">
+                            <th onclick="toggleSort('timestampRaw')" class="py-3 px-4 cursor-pointer hover:bg-gray-100 transition duration-150">Timestamp <span id="sort-icon-timestampRaw">▼</span></th>
+                            <th onclick="toggleSort('playerNumber')" class="py-3 px-4 cursor-pointer hover:bg-gray-100 transition duration-150">Player ID <span id="sort-icon-playerNumber" class="text-gray-300">↕</span></th>
+                            <th onclick="toggleSort('evaluator')" class="py-3 px-4 cursor-pointer hover:bg-gray-100 transition duration-150">Scout <span id="sort-icon-evaluator" class="text-gray-300">↕</span></th>
+                            <th onclick="toggleSort('rating')" class="py-3 px-4 text-center cursor-pointer hover:bg-gray-100 transition duration-150">Score <span id="sort-icon-rating" class="text-gray-300">↕</span></th>
+                            <th class="py-3 px-4 max-w-xs">Technical Scouting Log</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="master-table-body" class="divide-y divide-gray-100 text-sm font-medium text-gray-700"></tbody>
+                </table>
+            </div>
+        </main>
+    </template>
+
+    <!-- ========================================== -->
+    <!-- FIREBASE FIRESTORE DATA STREAM ENGINE       -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNL6Ik1-uFaELPwgUSTxLgVbgv_WjxplU",
+            authDomain: "top16-c8cea.firebaseapp.com",
+            projectId: "top16-c8cea",
+            storageBucket: "top16-c8cea.firebasestorage.app",
+            messagingSenderId: "1082284210993",
+            appId: "1:1082284210993:web:0166eacedc2d054d174e10",
+            measurementId: "G-DRL91CYDD5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let globalEvaluationsList = [];
+        let currentSortColumn = 'timestampRaw';
+        let isAscending = false;
+        let activeGroupingMode = 'none';
+        let savedPasscodeHash = null;
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function fetchGatekeeperSecret() {
+            try {
+                const secretDocRef = doc(db, "secrets", "gatekeeper");
+                const secretSnap = await getDoc(secretDocRef);
+                if (secretSnap.exists()) {
+                    savedPasscodeHash = secretSnap.data().passcodeHash;
+                    
+                    // If already verified earlier this session, automatically pull their name and bypass
+                    const savedName = sessionStorage.getItem('admin_scout_name');
+                    if (sessionStorage.getItem('admin_authorized') === 'true' && savedName) {
+                        bypassGatekeeperUI(savedName);
+                        initializeDataStream();
+                    }
+                }
+            } catch (err) {
+                console.error("Firestore Security Retrieval Error:", err);
+            }
+        }
+        fetchGatekeeperSecret();
+
+        window.verifyAdminPasscode = async function(event) {
+            event.preventDefault();
+            const nameField = document.getElementById('gatekeeper-scout-name');
+            const passcodeField = document.getElementById('gatekeeper-passcode-input');
+            const errorElement = document.getElementById('gatekeeper-error-msg');
+            
+            if (!savedPasscodeHash) {
+                alert("Security config loading... Please give it a brief second and try again.");
+                return;
+            }
+
+            const cleanName = nameField.value.trim();
+            const inputHash = await sha256(passcodeField.value);
+
+            if (inputHash === savedPasscodeHash) {
+                sessionStorage.setItem('admin_authorized', 'true');
+                sessionStorage.setItem('admin_scout_name', cleanName);
+                bypassGatekeeperUI(cleanName);
+                initializeDataStream();
+            } else {
+                errorElement.classList.remove('hidden');
+                passcodeField.value = '';
+                passcodeField.focus();
+            }
+        }
+
+        function bypassGatekeeperUI(adminName) {
+            document.getElementById('gatekeeper-modal').classList.add('hidden');
+            document.getElementById('active-admin-display').textContent = adminName;
+            const content = document.getElementById('admin-content-blur-wrapper');
+            content.classList.remove('blur-sm', 'pointer-events-none');
+        }
+
+        function initializeDataStream() {
+            const evaluationsCollection = collection(db, 'evaluations');
+            const q = query(evaluationsCollection, orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                globalEvaluationsList = [];
+                snapshot.forEach((doc) => {
+                    const item = doc.data();
+                    let rawTime = item.timestamp ? item.timestamp.toDate().getTime() : 0;
+                    let dateString = "---";
+                    if (item.timestamp) {
+                        const jsDate = item.timestamp.toDate();
+                        dateString = jsDate.toLocaleDateString() + ' ' + jsDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    globalEvaluationsList.push({
+                        id: doc.id,
+                        timestamp: dateString,
+                        timestampRaw: rawTime,
+                        playerNumber: item.playerNumber || 0,
+                        evaluator: item.evaluator || "Anonymous",
+                        rating: item.rating || 0,
+                        notes: item.notes || ""
+                    });
+                });
+
+                calculateMetrics();
+                applyFiltersAndSort();
+            });
+        }
+
+        function calculateMetrics() {
+            const uniquePlayers = new Set();
+            const uniqueScouts = new Set();
+
+            globalEvaluationsList.forEach(item => {
+                if(item.playerNumber) uniquePlayers.add(item.playerNumber);
+                uniqueScouts.add(item.evaluator.trim().toLowerCase());
+            });
+
+            document.getElementById('stat-total-evals').textContent = globalEvaluationsList.length;
+            document.getElementById('stat-unique-players').textContent = uniquePlayers.size;
+            document.getElementById('stat-total-scouts').textContent = uniqueScouts.size;
+        }
+
+        window.setGrouping = function(mode) {
+            activeGroupingMode = mode;
+            document.querySelectorAll('.group-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-gray-900', 'shadow-xs');
+                btn.classList.add('text-gray-500');
+            });
+            const activeBtn = document.getElementById(`group-btn-${mode}`);
+            activeBtn.classList.remove('text-gray-500');
+            activeBtn.classList.add('bg-white', 'text-gray-900', 'shadow-xs');
+            applyFiltersAndSort();
+        }
+
+        window.toggleSort = function(columnName) {
+            if (currentSortColumn === columnName) {
+                isAscending = !isAscending;
+            } else {
+                currentSortColumn = columnName;
+                isAscending = true;
+            }
+            applyFiltersAndSort();
+        }
+
+        window.applyFiltersAndSort = function() {
+            const container = document.getElementById('dashboard-view-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const searchTerm = document.getElementById('admin-search-input').value.toLowerCase().trim();
+
+            let processedList = globalEvaluationsList.filter(item => {
+                return item.evaluator.toLowerCase().includes(searchTerm) || 
+                       item.playerNumber.toString().includes(searchTerm) || 
+                       item.notes.toLowerCase().includes(searchTerm);
+            });
+
+            processedList.sort((a, b) => {
+                let valA = a[currentSortColumn];
+                let valB = b[currentSortColumn];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return isAscending ? -1 : 1;
+                if (valA > valB) return isAscending ? 1 : -1;
+                return 0;
+            });
+
+            if (activeGroupingMode === 'none') {
+                renderFlatSpreadsheet(container, processedList);
+                updateSortIcons();
+            } else {
+                renderGroupedAccordions(container, processedList);
+            }
+        }
+
+        function renderFlatSpreadsheet(targetContainer, dataset) {
+            const template = document.getElementById('spreadsheet-template').content.cloneNode(true);
+            const tbody = template.getElementById('master-table-body');
+
+            if (dataset.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 italic">No matching records found.</td></tr>`;
+                targetContainer.appendChild(template);
+                return;
+            }
+
+            dataset.forEach(item => {
+                tbody.appendChild(createRowElement(item));
+            });
+            targetContainer.appendChild(template);
+        }
+
+        function renderGroupedAccordions(targetContainer, dataset) {
+            if (dataset.length === 0) {
+                targetContainer.innerHTML = `<div class="bg-white p-8 rounded-2xl border border-gray-200 text-center text-gray-400 italic">No matching records found.</div>`;
+                return;
+            }
+
+            const groups = {};
+            dataset.forEach(item => {
+                let key = item[activeGroupingMode];
+                if (activeGroupingMode === 'rating') {
+                    if (key === 1) key = "Score 1 - Best";
+                    else if (key === 2) key = "Score 2 - Average";
+                    else if (key === 3) key = "Score 3 - Below";
+                } else if (activeGroupingMode === 'playerNumber') {
+                    key = `Player #${key}`;
+                }
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(item);
+            });
+
+            Object.keys(groups).sort().forEach(groupTitle => {
+                const groupItems = groups[groupTitle];
+                const groupSection = document.createElement('div');
+                groupSection.className = "bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition";
+
+                groupSection.innerHTML = `
+                    <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center select-none font-bold">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-black text-gray-900">${groupTitle}</span>
+                            <span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-semibold">${groupItems.length} logs</span>
+                        </div>
+                        <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Categorized</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <tbody class="divide-y divide-gray-100 text-sm font-medium text-gray-700"></tbody>
+                        </table>
+                    </div>
+                `;
+
+                const tbody = groupSection.querySelector('tbody');
+                groupItems.forEach(item => {
+                    tbody.appendChild(createRowElement(item));
+                });
+                targetContainer.appendChild(groupSection);
+            });
+        }
+
+        function createRowElement(item) {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50/70 transition-colors";
+
+            let ratingBadge = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+            if(item.rating === 2) ratingBadge = "bg-amber-50 text-amber-700 border border-amber-200";
+            if(item.rating === 3) ratingBadge = "bg-rose-50 text-rose-700 border border-rose-200";
+
+            tr.innerHTML = `
+                <td class="py-3 px-4 text-xs text-gray-400 font-mono font-normal">${item.timestamp}</td>
+                <td class="py-3 px-4 font-black text-gray-900">#${item.playerNumber}</td>
+                <td class="py-3 px-4 text-gray-600">${item.evaluator}</td>
+                <td class="py-3 px-4 text-center">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${ratingBadge}">${item.rating}</span>
+                </td>
+                <td class="py-3 px-4 text-xs text-gray-500 max-w-xs truncate font-normal" title="${item.notes.replace(/"/g, '&quot;')}">
+                    ${item.notes ? item.notes : '<span class="italic text-gray-300 font-normal">No technical logs compiled</span>'}
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <button onclick="confirmDeleteRecord('${item.id}', '${item.playerNumber}', '${item.evaluator.replace(/'/g, "\\'")}')" class="text-xs bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold px-2.5 py-1.5 rounded-lg border border-rose-200 hover:border-rose-600 transition duration-150 cursor-pointer">
+                        Delete
+                    </button>
+                </td>
+            `;
+            return tr;
+        }
+
+        function updateSortIcons() {
+            const columns = ['timestampRaw', 'playerNumber', 'evaluator', 'rating'];
+            columns.forEach(col => {
+                const iconElement = document.getElementById(`sort-icon-${col}`);
+                if (!iconElement) return;
+                
+                if (col === currentSortColumn) {
+                    iconElement.textContent = isAscending ? "▲" : "▼";
+                    iconElement.className = "text-emerald-600 font-black";
+                } else {
+                    iconElement.textContent = "↕";
+                    iconElement.className = "text-gray-300 font-normal";
+                }
+            });
+        }
+
+        window.confirmDeleteRecord = async function(documentId, jerseyNum, scoutName) {
+            const activeAdmin = sessionStorage.getItem('admin_scout_name') || "Unknown Admin";
+            const warningText = `⚠️ CRITICAL ACTION WARNING:\n\n${activeAdmin}, are you absolutely sure you want to permanently delete this evaluation for Player #${jerseyNum} recorded by ${scoutName}?`;
+            
+            if (confirm(warningText)) {
+                try {
+                    const recordDocRef = doc(db, 'evaluations', documentId);
+                    await deleteDoc(recordDocRef);
+                } catch (error) {
+                    alert("Error: Missing required collection write permissions.");
+                }
+            }
+        }
+
+        window.exportToExcel = function() {
+            if (globalEvaluationsList.length === 0) {
+                alert("There is no evaluation data available to export yet.");
+                return;
+            }
+            const headers = ["Timestamp", "Player Jersey Number", "Evaluator Scout", "Rating Score", "Scouting Notes"];
+            const rows = globalEvaluationsList.map(item => [
+                item.timestamp,
+                item.playerNumber,
+                item.evaluator,
+                item.rating,
+                `"${item.notes.replace(/"/g, '""')}"`
+            ]);
+            const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.createElement("a");
+            downloadLink.setAttribute("href", url);
+            downloadLink.setAttribute("download", `Top16_Master_Evaluations_Export_${new Date().toISOString().slice(0,10)}.csv`);
+            downloadLink.style.visibility = 'hidden';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
+</body>
+</html>

@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Top16 - Soccer Tryout Evaluator</title>
-    <!-- Tailwind CSS for rapid mobile styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- PWA Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Top16%20Soccer%20Tryouts%22,%22short_name%22:%22Top16%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f3f4f6%22,%22theme_color%22:%22%23059669%22}">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
 
-    <!-- 1. REQUIRED SIGN-IN SCREEN -->
     <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen p-4">
         <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm border border-gray-200">
             <h1 class="text-3xl font-black text-emerald-600 mb-1 text-center tracking-tight">⚽ Top16</h1>
@@ -39,22 +36,33 @@
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER (Hidden by default) -->
     <div id="app-screen" class="hidden max-w-md mx-auto p-4 pb-24">
         
-        <!-- HEADER & ACTIVE EVALUATOR STATUS -->
-        <header class="flex justify-between items-end mb-4 border-b border-gray-200 pb-3">
+        <header class="flex justify-between items-end mb-4 border-b border-gray-200 pb-3 gap-2">
             <div>
                 <h1 class="text-2xl font-black text-gray-900 tracking-tight">Top16</h1>
-                <p class="text-xs text-gray-500">Real-time Tryout Scouting (Daylight Light)</p>
+                <p class="text-xs text-gray-500">Real-time Tryout Scouting (Hashed Security)</p>
+                
+                <a href="admin.html" class="inline-flex items-center gap-1 mt-1.5 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                    </svg>
+                    Go to Admin Dashboard &rarr;
+                </a>
             </div>
-            <div class="text-right bg-white border border-gray-200 rounded-lg px-3 py-1 shadow-xs">
-                <span class="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Active Scout</span>
-                <span id="active-evaluator-display" class="text-sm font-bold text-emerald-600">---</span>
+            <div class="text-right bg-white border border-gray-200 rounded-lg p-2 shadow-xs flex items-center gap-3 shrink-0">
+                <div>
+                    <span class="text-[9px] text-gray-400 block font-semibold uppercase tracking-wider">Active Scout</span>
+                    <span id="active-evaluator-display" class="text-xs font-bold text-emerald-600 block max-w-[100px] truncate">---</span>
+                </div>
+                <button onclick="handleLogout()" title="Log out session" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-md text-rose-600 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                    </svg>
+                </button>
             </div>
         </header>
 
-        <!-- CRITERIA TIPS REMINDER -->
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 text-xs text-blue-800">
             <span class="font-bold uppercase tracking-wider text-blue-700 block mb-1">👀 What to look for:</span>
             <ul class="list-disc list-inside space-y-0.5 text-blue-900">
@@ -64,25 +72,20 @@
             </ul>
         </div>
 
-        <!-- EVALUATION FORM -->
         <main class="bg-white rounded-2xl p-4 shadow-md border border-gray-200 mb-6">
             <form id="evaluation-form" onsubmit="submitEvaluation(event)">
                 
-                <!-- Player Selector / Input -->
                 <div class="mb-4">
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Player Jersey #</label>
                     <div class="flex gap-2">
                         <input type="number" id="player-number" required placeholder="e.g. 23" min="1" max="999999" class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg font-bold text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                         
-                        <!-- Quick Select Existing Dropdown -->
                         <select id="existing-players-dropdown" onchange="selectExistingPlayer(this.value)" class="bg-gray-100 border border-gray-300 rounded-xl px-2 text-xs font-semibold text-gray-700 max-w-[120px] focus:outline-none">
                             <option value="">Active (#)</option>
-                            <!-- Dynamically populated -->
                         </select>
                     </div>
                 </div>
 
-                <!-- 1-2-3 Rapid Fire Rating Big Buttons -->
                 <div class="mb-5">
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Rating</label>
                     <div class="grid grid-cols-3 gap-3">
@@ -102,20 +105,17 @@
                     <input type="hidden" id="selected-rating" required>
                 </div>
 
-                <!-- Scouting Notes -->
                 <div class="mb-5">
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes (Optional)</label>
                     <textarea id="player-notes" rows="2" placeholder="Great speed, weak left foot, physical..." class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
                 </div>
 
-                <!-- Submit Button -->
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl shadow-md transition duration-150 transform active:scale-98 cursor-pointer">
                     Submit Evaluation
                 </button>
             </form>
         </main>
 
-        <!-- EVALUATOR'S PERSONAL HISTORY LIST -->
         <section>
             <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center justify-between">
                 <span>My History</span>
@@ -123,38 +123,44 @@
             </h2>
             <div id="history-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
                 <p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>
-                <!-- Dynamically populated cards -->
             </div>
         </section>
     </div>
 
-    <!-- ========================================== -->
-    <!-- FIREBASE FIRESTORE v12 INFRASTRUCTURE       -->
-    <!-- ========================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
 
-        // !!! REPLACE THIS WITH YOUR FIREBASE CONFIGURATION !!!
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDNL6Ik1-uFaELPwgUSTxLgVbgv_WjxplU",
+            authDomain: "top16-c8cea.firebaseapp.com",
+            projectId: "top16-c8cea",
+            storageBucket: "top16-c8cea.firebasestorage.app",
+            messagingSenderId: "1082284210993",
+            appId: "1:1082284210993:web:0166eacedc2d054d174e10",
+            measurementId: "G-DRL91CYDD5"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const analytics = getAnalytics(app);
 
-        // State Tracking
+        const TARGET_HASH = "03391382a15ee47c608b6bb39685ab682a8eecc3c451f33c96edbe4f984340a4";
+
+        let detachSnapshotListener = null;
         let currentRating = null;
         let allPlayersList = new Set();
         let myEvaluations = [];
 
-        // --- Gatekeeper Form Intake ---
-        window.handleLoginSubmit = function() {
+        async function generateSHA256(message) {
+            const msgBuffer = new TextEncoder().encode(message);                    
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        window.handleLoginSubmit = async function() {
             const nameInput = document.getElementById('auth-evaluator-name').value.trim();
             const codeInput = document.getElementById('secret-code-input').value.trim();
             
@@ -163,7 +169,9 @@
                 return;
             }
 
-            if (codeInput.toLowerCase() !== "deadpool") {
+            const inputHash = await generateSHA256(codeInput.toLowerCase());
+
+            if (inputHash !== TARGET_HASH) {
                 showAuthError("⚠️ Invalid Secret Access Code. Access Denied.");
                 document.getElementById('secret-code-input').value = '';
                 document.getElementById('secret-code-input').focus();
@@ -171,9 +179,33 @@
             }
 
             sessionStorage.setItem('evaluatorName', nameInput);
-            sessionStorage.setItem('tryoutPlainPasscode', codeInput.toLowerCase());
+            sessionStorage.setItem('tryoutHashedPasscode', inputHash);
             
             launchApp(nameInput);
+        }
+
+        window.handleLogout = function() {
+            if (confirm("Are you sure you want to sign out? This clears your temporary session cache on this device.")) {
+                if (typeof detachSnapshotListener === 'function') {
+                    detachSnapshotListener();
+                }
+
+                sessionStorage.clear();
+
+                currentRating = null;
+                document.getElementById('evaluation-form').reset();
+                document.getElementById('selected-rating').value = '';
+                document.querySelectorAll('.rating-btn').forEach(btn => {
+                    btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
+                    btn.classList.add('border-gray-200', 'bg-gray-50');
+                });
+
+                document.getElementById('app-screen').classList.add('hidden');
+                document.getElementById('auth-screen').classList.remove('hidden');
+                
+                document.getElementById('secret-code-input').value = '';
+                document.getElementById('auth-evaluator-name').value = '';
+            }
         }
 
         function showAuthError(message) {
@@ -192,15 +224,14 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const cachedName = sessionStorage.getItem('evaluatorName');
-            const cachedCode = sessionStorage.getItem('tryoutPlainPasscode');
-            if (cachedName && cachedCode && cachedCode === "deadpool") {
+            const cachedHash = sessionStorage.getItem('tryoutHashedPasscode');
+            if (cachedName && cachedHash && cachedHash === TARGET_HASH) {
                 launchApp(cachedName);
             } else {
                 sessionStorage.clear();
             }
         });
 
-        // --- Fast UI Rating Select ---
         window.setRating = function(rating) {
             currentRating = rating;
             document.getElementById('selected-rating').value = rating;
@@ -218,7 +249,6 @@
             if (rating === 3) activeBtn.classList.add('border-rose-500');
         }
 
-        // --- Quick History Form Population ---
         window.loadPlayerToForm = function(playerNum, rating, notes) {
             document.getElementById('player-number').value = playerNum;
             setRating(rating);
@@ -233,13 +263,16 @@
             }
         }
 
-        // --- Database Synchronization ---
         function initDataListeners(evaluatorName) {
+            if (typeof detachSnapshotListener === 'function') {
+                detachSnapshotListener();
+            }
+
             const evaluationsCollection = collection(db, 'evaluations');
             const q = query(evaluationsCollection, orderBy('timestamp', 'desc'));
             const normalizedEvaluator = evaluatorName.toLowerCase();
             
-            onSnapshot(q, (snapshot) => {
+            detachSnapshotListener = onSnapshot(q, (snapshot) => {
                 allPlayersList.clear();
                 myEvaluations = [];
 
@@ -306,16 +339,15 @@
             });
         }
 
-        // --- Submission Logic ---
         window.submitEvaluation = function(event) {
             event.preventDefault();
             
             const evaluator = sessionStorage.getItem('evaluatorName');
-            const clearCode = sessionStorage.getItem('tryoutPlainPasscode');
+            const hashedCode = sessionStorage.getItem('tryoutHashedPasscode');
             const playerNumber = document.getElementById('player-number').value.trim();
             const notes = document.getElementById('player-notes').value.trim();
             
-            if (!evaluator || !clearCode) {
+            if (!evaluator || !hashedCode) {
                 alert("Session context missing. Please log in again.");
                 sessionStorage.clear();
                 window.location.reload();
@@ -332,7 +364,7 @@
                 playerNumber: parseInt(playerNumber),
                 rating: parseInt(currentRating),
                 notes: notes,
-                passcode: clearCode, 
+                passcodeHash: hashedCode, 
                 timestamp: serverTimestamp()
             }).then(() => {
                 document.getElementById('player-number').value = '';
