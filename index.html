@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top16 - Soccer Tryout Evaluator</title>
+    <title>Top16 - Soccer Tryouts</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 	<link rel="manifest" href="manifest.json">
 </head>
@@ -17,7 +17,7 @@
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Evaluator Name</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scout Name</label>
                     <input type="text" id="auth-evaluator-name" placeholder="Coach John / Scout Sarah" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-base font-medium text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                 </div>
                 
@@ -148,20 +148,20 @@
 				</div>				
 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl shadow-md transition duration-150 transform active:scale-98 cursor-pointer">
-                    Submit Evaluation
+                    Save Scouting Report
                 </button>
             </form>
         </main>
 
 		<section>
 			<h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center justify-between">
-				<span>My History</span>
+				<span>My Scouting Reports</span>
 				<div id="history-header-actions" class="flex items-center gap-2">
-					<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 submissions</span>
+					<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 reports</span>
 				</div>
 			</h2>
 			<div id="history-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
-				<p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>
+				<p class="text-sm text-gray-400 italic text-center py-4">No scouting reports submitted yet.</p>
 			</div>
 		</section>
 		
@@ -259,7 +259,7 @@
 			link.setAttribute("href", encodedUri);
 			
 			// Formats filename dynamically: e.g., "Top16_Coach_John_Evaluations.csv"
-			const formattedFilename = `Top16_${scoutName.replace(/\s+/g, '_')}_Evaluations.csv`;
+			const formattedFilename = `Top16_${scoutName.replace(/\s+/g, '_')}_ScoutingReports.csv`;
 			link.setAttribute("download", formattedFilename);
 			
 			document.body.appendChild(link);
@@ -417,16 +417,16 @@
 			
 			// 1. If history is completely empty, clear any buttons and show fallback text
 			if (myEvaluations.length === 0) {
-				actionsContainer.innerHTML = `<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 submissions</span>`;
-				container.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>`;
+				actionsContainer.innerHTML = `<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 reports</span>`;
+				container.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-4">No scouting reports submitted yet.</p>`;
 				return;
 			}
 
 			// 2. If data exists, update the count AND append the active Export Button
-			const submissionText = `${myEvaluations.length} submission${myEvaluations.length === 1 ? '' : 's'}`;
+			const submissionText = `${myEvaluations.length} report${myEvaluations.length === 1 ? '' : 's'}`;
 			actionsContainer.innerHTML = `
 				<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">${submissionText}</span>
-				<button onclick="exportScoutDataToCSV()" title="Export evaluations to CSV file" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md text-xs font-bold text-emerald-700 transition cursor-pointer flex items-center gap-1 animate-fadeIn">
+				<button onclick="exportScoutDataToCSV()" title="Export scouting reports to CSV file" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md text-xs font-bold text-emerald-700 transition cursor-pointer flex items-center gap-1 animate-fadeIn">
 					💾 Export CSV
 				</button>
 			`;
