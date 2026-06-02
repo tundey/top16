@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Top16 - Soccer Tryout Evaluator</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Top16%20Soccer%20Tryouts%22,%22short_name%22:%22Top16%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f3f4f6%22,%22theme_color%22:%22%23059669%22}">
+	<link rel="manifest" href="manifest.json">
 </head>
 
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen text-lg">
@@ -29,7 +27,7 @@
                 </div>
 
                 <button onclick="handleLoginSubmit()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl transition duration-200 cursor-pointer mt-2 shadow-sm shadow-emerald-200">
-                    Enter Top16 Pitch
+                    Enter Top16
                 </button>
             </div>
             
@@ -43,7 +41,7 @@
         <header class="flex justify-between items-end mb-4 border-b border-gray-200 pb-3 gap-2">
             <div>
                 <h1 class="text-2xl font-black text-gray-900 tracking-tight">Top16</h1>
-                <p class="text-xs text-gray-500">Real-time Tryout Scouting (Hashed Security)</p>
+                <p class="text-xs text-gray-500">2026 U13/14 Boys Tryouts</p>
                 
                 <a href="admin.html" class="inline-flex items-center gap-1 mt-1.5 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3">
@@ -106,11 +104,6 @@
                     </div>
                     <input type="hidden" id="selected-rating" required>
                 </div>
-
-                <!--<div class="mb-5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes (Optional)</label>
-                    <textarea id="player-notes" rows="2" placeholder="Great speed, weak left foot, physical..." class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
-                </div> -->
 				
 				<div class="mb-5">
 					<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes</label>
@@ -131,6 +124,10 @@
 						<button type="button" onclick="appendQuickTag('Physical')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
 							+ Physical
 						</button>						
+						<button type="button" onclick="appendQuickTag('Speed')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Speed
+						</button>
+					
 
 						<button type="button" onclick="appendQuickTag('Heavy touch under pressure')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
 							- Heavy Touch
@@ -156,15 +153,19 @@
             </form>
         </main>
 
-        <section>
-            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center justify-between">
-                <span>My History</span>
-                <span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 submissions</span>
-            </h2>
-            <div id="history-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
-                <p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>
-            </div>
-        </section>
+		<section>
+			<h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center justify-between">
+				<span>My History</span>
+				<div id="history-header-actions" class="flex items-center gap-2">
+					<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 submissions</span>
+				</div>
+			</h2>
+			<div id="history-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+				<p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>
+			</div>
+		</section>
+		
+		
     </div>
 
     <script type="module">
@@ -223,6 +224,48 @@
 			// Automatically reset focus back onto the field to preserve continuity
 			notesField.focus();
 		}
+		
+		window.exportScoutDataToCSV = function() {
+			if (!myEvaluations || myEvaluations.length === 0) {
+				alert("No evaluations found to export for this session.");
+				return;
+			}
+
+			const scoutName = sessionStorage.getItem('evaluatorName') || 'Scout';
+			
+			// 1. Build the CSV Header Configuration
+			let csvContent = "data:text/csv;charset=utf-8,";
+			csvContent += "Player Jersey Number,Scout Rating,Timestamp,Scouting Notes\r\n";
+
+			// 2. Loop and sanitize evaluation rows
+			myEvaluations.forEach(item => {
+				const playerNum = item.playerNumber;
+				const rating = item.rating;
+				
+				// Format time smoothly for spreadsheet systems
+				const timeStr = item.timestamp ? item.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
+				
+				// Escape quotes inside custom text notes to prevent splitting columns layout errors
+				const cleanNotes = item.notes ? `"${item.notes.replace(/"/g, '""')}"` : '""';
+
+				csvContent += `${playerNum},${rating},${timeStr},${cleanNotes}\r\n`;
+			});
+
+			// 3. Compile Data Stream URI
+			const encodedUri = encodeURI(csvContent);
+			
+			// 4. Anchor a phantom link layer to trigger native mobile file download pipelines
+			const link = document.createElement("a");
+			link.setAttribute("href", encodedUri);
+			
+			// Formats filename dynamically: e.g., "Top16_Coach_John_Evaluations.csv"
+			const formattedFilename = `Top16_${scoutName.replace(/\s+/g, '_')}_Evaluations.csv`;
+			link.setAttribute("download", formattedFilename);
+			
+			document.body.appendChild(link);
+			link.click(); // Fires download sequence instantly
+			document.body.removeChild(link); // Housekeeping cleanup
+		}		
 
         window.handleLoginSubmit = async function() {
             const nameInput = document.getElementById('auth-evaluator-name').value.trim();
@@ -370,15 +413,25 @@
 
 		function updateHistoryUI() {
 			const container = document.getElementById('history-list');
-			const countLabel = document.getElementById('history-count');
+			const actionsContainer = document.getElementById('history-header-actions');
 			
-			countLabel.textContent = `${myEvaluations.length} submission${myEvaluations.length === 1 ? '' : 's'}`;
-
+			// 1. If history is completely empty, clear any buttons and show fallback text
 			if (myEvaluations.length === 0) {
+				actionsContainer.innerHTML = `<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 submissions</span>`;
 				container.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>`;
 				return;
 			}
 
+			// 2. If data exists, update the count AND append the active Export Button
+			const submissionText = `${myEvaluations.length} submission${myEvaluations.length === 1 ? '' : 's'}`;
+			actionsContainer.innerHTML = `
+				<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">${submissionText}</span>
+				<button onclick="exportScoutDataToCSV()" title="Export evaluations to CSV file" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md text-xs font-bold text-emerald-700 transition cursor-pointer flex items-center gap-1 animate-fadeIn">
+					💾 Export CSV
+				</button>
+			`;
+
+			// 3. Clear container and render evaluation logs
 			container.innerHTML = '';
 			myEvaluations.forEach(item => {
 				const card = document.createElement('div');
@@ -389,14 +442,11 @@
 				if(item.rating === 2) ratingColor = "text-amber-600";
 				if(item.rating === 3) ratingColor = "text-rose-600";
 
-				// --- LATENCY OPTIMIZATION TIMESTAMP ENGINE ---
 				let displayTime = "Syncing...";
 				if (item.timestamp) {
-					// Convert official Firestore server seconds map into JavaScript date object
 					const dateObj = item.timestamp.toDate();
 					displayTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 				} else {
-					// Edge-Case Fallback: Fallback to current browser time while writing to server pipeline
 					displayTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 				}
 
@@ -408,7 +458,6 @@
 						</div>
 						<p class="text-xs text-gray-500 truncate mt-0.5">${item.notes ? item.notes : '<span class="italic text-gray-300">No notes</span>'}</p>
 					</div>
-					
 					<div class="text-right shrink-0">
 						<div class="text-[10px] text-gray-400 font-mono font-semibold uppercase tracking-wider">${displayTime}</div>
 						<div class="text-[9px] text-emerald-600 font-bold tracking-tight mt-0.5">Tap to Edit</div>

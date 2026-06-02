@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Top16 - Admin Dashboard</title>
-    <!-- Tailwind CSS for rapid styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+	<link rel="manifest" href="manifest.json">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen relative">
 
@@ -20,26 +20,25 @@
                 </svg>
             </div>
             <h2 class="text-xl font-black text-gray-900 tracking-tight mb-1">Admin Authorization Required</h2>
-            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to open the command center spreadsheet.</p>
+            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to open the command center.</p>
             
             <form id="gatekeeper-form" onsubmit="verifyAdminPasscode(event)" class="text-left space-y-3">
                 <div>
                     <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Scout / Admin Name</label>
-                    <input type="text" id="gatekeeper-scout-name" placeholder="Coach Name" required autocomplete="name"
+                    <input type="text" id="gatekeeper-scout-name" placeholder="Coach John / Scout Sarah" required autocomplete="name"
                         class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 font-semibold">
                 </div>
 
                 <div>
                     <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Passcode</label>
-                    <input type="password" id="gatekeeper-passcode-input" placeholder="••••" autocomplete="current-password" required
-                        class="w-full text-center text-xl font-black tracking-widest bg-gray-50 border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900">
+                    <input type="password" id="gatekeeper-passcode-input" placeholder="Secret Code" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">						
                 </div>
                 
                 <p id="gatekeeper-error-msg" class="text-xs text-rose-600 font-bold hidden text-center pt-1">⚠️ Access Denied. Incorrect Passcode.</p>
                 
-                <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white font-bold p-3 rounded-xl transition cursor-pointer text-sm shadow-md pt-2">
-                    Unlock Dashboard
-                </button>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl transition duration-200 cursor-pointer mt-2 shadow-sm shadow-emerald-200">
+                    Enter Dashboard
+                </button>			
             </form>
         </div>
     </div>
@@ -51,7 +50,6 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-200 pb-4 gap-4">
             <div>
                 <h1 class="text-3xl font-black text-gray-900 tracking-tight">🏆 Top16 Command Center</h1>
-                <p class="text-xs text-gray-500">Active Session: <span id="active-admin-display" class="font-bold text-gray-700">Connecting...</span></p>
             </div>
             
             <!-- ACTION BUTTONS -->
@@ -69,6 +67,17 @@
                     </svg>
                     Export to Excel (.csv)
                 </button>
+				
+                <div>
+                    <span class="text-[9px] text-gray-400 block font-semibold uppercase tracking-wider">Active Scout</span>
+                    <span id="active-admin-display" class="font-bold text-gray-700">Connecting...</span>
+                </div>
+				
+                <button onclick="handleAdminLogout()" title="Log out session" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-md text-rose-600 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                    </svg>
+                </button>				
             </div>
         </header>
 
@@ -461,6 +470,19 @@
             downloadLink.click();
             document.body.removeChild(downloadLink);
         }
+		
+		/**
+		 * Destroys the active session cache and forces the browser back to the gatekeeper login layout
+		 */
+		window.handleAdminLogout = function() {
+			if (confirm("Are you sure you want to log out of the admin session?")) {
+				// Clear all active tracking contexts, names, and access verification tokens
+				sessionStorage.clear();
+				
+				// Force replace the navigation location history string back to the home page gatekeeper
+				window.location.replace('admin.html');
+			}
+		}		
     </script>
 </body>
 </html>
