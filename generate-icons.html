@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Top16 Icon Generator</title>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f3f4f6;">
+    <h2>Top16 App Icon Exporter</h2>
+    <p>Click each button below to download the exact PNG assets required for your Android manifest.</p>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <div style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
+        <button onclick="downloadIcon(192)" style="padding: 12px 24px; background: #059669; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Download icon-192.png</button>
+        <button onclick="downloadIcon(512)" style="padding: 12px 24px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Download icon-512.png</button>
+    </div>
+
+    <script>
+function downloadIcon(size) {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = size;
+    canvas.height = size;
+
+    const s = size / 24;
+
+    // Create a perfect circular clipping path so colors fill the circle completely without bleeding
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(12*s, 12*s, 12*s, 0, 2 * Math.PI);
+    ctx.clip();
+
+    // 1. Solid Base Shading Fill
+    ctx.fillStyle = '#f3f4f6';
+    ctx.fillRect(0, 0, size, size);
+
+    // 2. Full-Bleed Emerald Green Panel 
+    ctx.fillStyle = 'rgba(5, 150, 105, 0.9)';
+    ctx.beginPath();
+    ctx.moveTo(12*s, -1*s);
+    ctx.bezierCurveTo(15.5*s, 3*s, 15.5*s, 9*s, 12*s, 13*s);
+    ctx.bezierCurveTo(8.5*s, 17*s, 8.5*s, 23*s, 12*s, 27*s);
+    ctx.bezierCurveTo(6.5*s, 24*s, 3*s, 18.5*s, 3*s, 12*s);
+    ctx.bezierCurveTo(3*s, 5.5*s, 6.5*s, 0*s, 12*s, -1*s);
+    ctx.fill();
+
+    // 3. Full-Bleed Indigo Blue Panel
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.85)';
+    ctx.beginPath();
+    ctx.moveTo(12*s, -1*s);
+    ctx.bezierCurveTo(8.5*s, 3*s, 8.5*s, 9*s, 12*s, 13*s);
+    ctx.bezierCurveTo(15.5*s, 17*s, 15.5*s, 23*s, 12*s, 27*s);
+    ctx.bezierCurveTo(17.5*s, 24*s, 21*s, 18.5*s, 21*s, 12*s);
+    ctx.bezierCurveTo(21*s, 5.5*s, 17.5*s, 0*s, 12*s, -1*s);
+    ctx.fill();
+
+    // 4. Full-Bleed Purple Base Accent
+    ctx.fillStyle = 'rgba(147, 51, 234, 0.8)';
+    ctx.beginPath();
+    ctx.moveTo(12*s, 13*s);
+    ctx.bezierCurveTo(14.5*s, 16*s, 17.5*s, 18*s, 17.5*s, 21.5*s);
+    ctx.bezierCurveTo(17.5*s, 25*s, 14.5*s, 26*s, 12*s, 26*s);
+    ctx.bezierCurveTo(9.5*s, 26*s, 6.5*s, 25*s, 6.5*s, 21.5*s);
+    ctx.bezierCurveTo(6.5*s, 18*s, 9.5*s, 16*s, 12*s, 13*s);
+    ctx.fill();
+
+    // 5. High-Contrast Soccer Seam Overlay (Stitch Lines)
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 0.8 * s;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    
+    // Core axes
+    ctx.moveTo(3*s, 12*s);  ctx.lineTo(21*s, 12*s);
+    ctx.moveTo(12*s, -1*s); ctx.lineTo(12*s, 25*s);
+    
+    // Panel seam curves
+    ctx.moveTo(12*s, -1*s); ctx.quadraticCurveTo(16.5*s, 4*s, 21*s, 8*s);
+    ctx.moveTo(12*s, -1*s); ctx.quadraticCurveTo(7.5*s, 4*s, 3*s, 8*s);
+    ctx.moveTo(12*s, 25*s); ctx.quadraticCurveTo(16.5*s, 20*s, 21*s, 16*s);
+    ctx.moveTo(12*s, 25*s); ctx.quadraticCurveTo(7.5*s, 20*s, 3*s, 16*s);
+    ctx.stroke();
+
+    ctx.restore(); // Exit circular crop container frame
+
+    // 6. Deep Outer Spherical Rim Line
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 0.8 * s;
+    ctx.beginPath();
+    ctx.arc(12*s, 12*s, 11.6*s, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // Fire download sequence
+    const link = document.createElement('a');
+    link.download = `icon-${size}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+    </script>
+</body>
+</html>

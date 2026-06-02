@@ -72,9 +72,26 @@
             </ul>
         </div>
 
+		<!-- PROTECTED ROSTER RANGE NOTICE BANNER -->
+		<div class="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 shadow-xs">
+			<div class="text-amber-600 shrink-0 mt-0.5">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+					<path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
+				</svg>
+			</div>
+			<div>
+				<h4 class="text-xs font-black text-amber-800 uppercase tracking-wider">Protected Pool Exception</h4>
+				<p class="text-xs text-amber-700 leading-normal mt-0.5">
+					Jersey numbers <strong class="font-extrabold text-amber-900">401 through 480</strong> belong to protected players. These athletes are locked and unavailable for draft selection.
+				</p>
+			</div>
+		</div>
+
         <main class="bg-white rounded-2xl p-4 shadow-md border border-gray-200 mb-6">
             <form id="evaluation-form" onsubmit="submitEvaluation(event)">
                 
+
+				
                 <div class="mb-4">
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Player Jersey #</label>
                     <div class="flex gap-2">
@@ -469,6 +486,18 @@
 
         window.submitEvaluation = function(event) {
             event.preventDefault();
+			
+			// --- PROTECTED PLAYER POOL DATA GUARD ---
+			const parsedPlayerNum = parseInt(document.getElementById('player-number').value.trim(), 10);
+
+			if (parsedPlayerNum >= 401 && parsedPlayerNum <= 480) {
+				alert(`🚫 Submission Denied: Player #${parsedPlayerNum} is part of the protected roster pool and should not be evaluated.`);
+				
+				// Reset fields to clean up execution context tracking loop
+				playerNumberField.value = '';
+				playerNumberField.focus();
+				return; // Hard stop code execution instantly
+			}			
             
             const evaluator = sessionStorage.getItem('evaluatorName');
             const hashedCode = sessionStorage.getItem('tryoutHashedPasscode');
