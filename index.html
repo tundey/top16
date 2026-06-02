@@ -107,10 +107,48 @@
                     <input type="hidden" id="selected-rating" required>
                 </div>
 
-                <div class="mb-5">
+                <!--<div class="mb-5">
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes (Optional)</label>
                     <textarea id="player-notes" rows="2" placeholder="Great speed, weak left foot, physical..." class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
-                </div>
+                </div> -->
+				
+				<div class="mb-5">
+					<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes</label>
+					
+					<div class="flex flex-wrap gap-1.5 mb-2.5" id="quick-tags-container">
+						<button type="button" onclick="appendQuickTag('Great first touch')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ First Touch
+						</button>
+						<button type="button" onclick="appendQuickTag('High work rate')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Work Rate
+						</button>
+						<button type="button" onclick="appendQuickTag('Vocal leader')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Vocal
+						</button>
+						<button type="button" onclick="appendQuickTag('Dominates 1v1s')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ 1v1 Dom
+						</button>
+						<button type="button" onclick="appendQuickTag('Physical')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Physical
+						</button>						
+
+						<button type="button" onclick="appendQuickTag('Heavy touch under pressure')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Heavy Touch
+						</button>
+						<button type="button" onclick="appendQuickTag('Weak left foot')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Weak Left
+						</button>
+						<button type="button" onclick="appendQuickTag('Chasing the game')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Chasing
+						</button>
+						<button type="button" onclick="appendQuickTag('Doesn\'t understand the game')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Not soccer smart
+						</button>						
+						
+					</div>
+
+					<textarea id="player-notes" rows="2" placeholder="Great speed, physical..." class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
+				</div>				
 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl shadow-md transition duration-150 transform active:scale-98 cursor-pointer">
                     Submit Evaluation
@@ -161,6 +199,30 @@
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
+
+		// --- Contextual Note Tag Appender Engine ---
+		window.appendQuickTag = function(tagValue) {
+			const notesField = document.getElementById('player-notes');
+			let currentText = notesField.value.trim();
+
+			if (currentText.length === 0) {
+				// If the area is blank, capitalize the tag and assign it directly
+				notesField.value = tagValue.charAt(0).toUpperCase() + tagValue.slice(1);
+			} else {
+				// If text already exists, evaluate if it ends with punctuation
+				const endsWithPunctuation = /[.,\/#!$%\^&\*;:{}=\-_`~()]/ .test(currentText.slice(-1));
+				
+				if (endsWithPunctuation) {
+					notesField.value = `${currentText} ${tagValue.charAt(0).toUpperCase() + tagValue.slice(1)}`;
+				} else {
+					// Append with a smooth comma separator layout structural convention
+					notesField.value = `${currentText}, ${tagValue.toLowerCase()}`;
+				}
+			}
+			
+			// Automatically reset focus back onto the field to preserve continuity
+			notesField.focus();
+		}
 
         window.handleLoginSubmit = async function() {
             const nameInput = document.getElementById('auth-evaluator-name').value.trim();
@@ -306,40 +368,55 @@
             });
         }
 
-        function updateHistoryUI() {
-            const container = document.getElementById('history-list');
-            const countLabel = document.getElementById('history-count');
-            
-            countLabel.textContent = `${myEvaluations.length} submission${myEvaluations.length === 1 ? '' : 's'}`;
+		function updateHistoryUI() {
+			const container = document.getElementById('history-list');
+			const countLabel = document.getElementById('history-count');
+			
+			countLabel.textContent = `${myEvaluations.length} submission${myEvaluations.length === 1 ? '' : 's'}`;
 
-            if (myEvaluations.length === 0) {
-                container.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>`;
-                return;
-            }
+			if (myEvaluations.length === 0) {
+				container.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-4">No evaluations submitted yet.</p>`;
+				return;
+			}
 
-            container.innerHTML = '';
-            myEvaluations.forEach(item => {
-                const card = document.createElement('div');
-                card.className = "bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center cursor-pointer hover:border-gray-400 shadow-xs transition active:scale-99";
-                card.setAttribute('onclick', `loadPlayerToForm('${item.playerNumber}', ${item.rating}, \`${item.notes.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)`);
-                
-                let ratingColor = "text-emerald-600";
-                if(item.rating === 2) ratingColor = "text-amber-600";
-                if(item.rating === 3) ratingColor = "text-rose-600";
+			container.innerHTML = '';
+			myEvaluations.forEach(item => {
+				const card = document.createElement('div');
+				card.className = "bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center cursor-pointer hover:border-gray-400 shadow-xs transition active:scale-99";
+				card.setAttribute('onclick', `loadPlayerToForm('${item.playerNumber}', ${item.rating}, \`${item.notes.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)`);
+				
+				let ratingColor = "text-emerald-600";
+				if(item.rating === 2) ratingColor = "text-amber-600";
+				if(item.rating === 3) ratingColor = "text-rose-600";
 
-                card.innerHTML = `
-                    <div class="flex-1 min-w-0 pr-2">
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-base font-black text-gray-900">#${item.playerNumber}</span>
-                            <span class="text-xs font-bold ${ratingColor}">Score: ${item.rating}</span>
-                        </div>
-                        <p class="text-xs text-gray-500 truncate mt-0.5">${item.notes ? item.notes : '<span class="italic text-gray-300">No notes</span>'}</p>
-                    </div>
-                    <div class="text-[10px] text-gray-400 font-mono whitespace-nowrap">Tap to Edit</div>
-                `;
-                container.appendChild(card);
-            });
-        }
+				// --- LATENCY OPTIMIZATION TIMESTAMP ENGINE ---
+				let displayTime = "Syncing...";
+				if (item.timestamp) {
+					// Convert official Firestore server seconds map into JavaScript date object
+					const dateObj = item.timestamp.toDate();
+					displayTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+				} else {
+					// Edge-Case Fallback: Fallback to current browser time while writing to server pipeline
+					displayTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+				}
+
+				card.innerHTML = `
+					<div class="flex-1 min-w-0 pr-2">
+						<div class="flex items-baseline gap-2">
+							<span class="text-base font-black text-gray-900">#${item.playerNumber}</span>
+							<span class="text-xs font-bold ${ratingColor}">Score: ${item.rating}</span>
+						</div>
+						<p class="text-xs text-gray-500 truncate mt-0.5">${item.notes ? item.notes : '<span class="italic text-gray-300">No notes</span>'}</p>
+					</div>
+					
+					<div class="text-right shrink-0">
+						<div class="text-[10px] text-gray-400 font-mono font-semibold uppercase tracking-wider">${displayTime}</div>
+						<div class="text-[9px] text-emerald-600 font-bold tracking-tight mt-0.5">Tap to Edit</div>
+					</div>
+				`;
+				container.appendChild(card);
+			});
+		}
 
         window.submitEvaluation = function(event) {
             event.preventDefault();
