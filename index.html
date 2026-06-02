@@ -9,7 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Top16%20Soccer%20Tryouts%22,%22short_name%22:%22Top16%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23f3f4f6%22,%22theme_color%22:%22%23059669%22}">
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen text-lg">
 
     <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen p-4">
         <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm border border-gray-200">
@@ -79,7 +80,7 @@
                 <div class="mb-4">
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Player Jersey #</label>
                     <div class="flex gap-2">
-                        <input type="number" id="player-number" required placeholder="e.g. 23" min="1" max="999999" class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg font-bold text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                        <input type="number" id="player-number" required placeholder="e.g. 123" min="1" max="999999" class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg font-bold text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                         
                         <select id="existing-players-dropdown" onchange="selectExistingPlayer(this.value)" class="bg-gray-100 border border-gray-300 rounded-xl px-2 text-xs font-semibold text-gray-700 max-w-[120px] focus:outline-none">
                             <option value="">Active (#)</option>
