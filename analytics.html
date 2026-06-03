@@ -220,6 +220,27 @@
 
 </div>
 
+<!-- SCOUTING REPORT MODAL DETAIL OVERLAY -->
+<div id="report-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all duration-200 opacity-0">
+    <div class="bg-white border border-gray-200 rounded-2xl max-w-lg w-full shadow-xl flex flex-col max-h-[85vh] transform scale-95 transition-all duration-200">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center px-5 py-4 border-b border-gray-150 bg-gray-50 rounded-t-2xl">
+            <div>
+                <h3 id="modal-player-title" class="text-base font-black text-gray-900">Player Profile Details</h3>
+                <p id="modal-player-subtitle" class="text-[11px] text-gray-400 font-medium font-mono"></p>
+            </div>
+            <button id="close-modal-btn" class="text-xs font-bold text-gray-400 hover:text-gray-700 bg-white border border-gray-200 px-2.5 py-1.5 rounded-xl transition cursor-pointer">
+                Close (ESC)
+            </button>
+        </div>
+        
+        <!-- Scrollable Modal Content Container -->
+        <div id="modal-reports-container" class="p-5 overflow-y-auto space-y-3 bg-gray-50/50 flex-1">
+            <!-- Target for compiled script loops -->
+        </div>
+    </div>
+</div>
+
         </div>
     </div>
 
@@ -340,11 +361,19 @@
 
                 if (item.playerNumber) {
                     if (!playerMap[item.playerNumber]) {
-                        playerMap[item.playerNumber] = { totalScore: 0, count: 0, notes: [] };
+                        playerMap[item.playerNumber] = { totalScore: 0, count: 0, notes: [], history: [] };
                     }
                     playerMap[item.playerNumber].totalScore += rating;
                     playerMap[item.playerNumber].count++;
                     if(item.notes) playerMap[item.playerNumber].notes.push(item.notes);
+					
+					// Map data bundle row right here
+					playerMap[item.playerNumber].history.push({
+						rating: item.rating,
+						note: item.notes,
+						scout: item.evaluator || "Anonymous Scout"
+					});
+		
                 }
             });
 
@@ -371,138 +400,242 @@
             document.getElementById(`bar-${id}`).style.width = `${percentage}%`;
         }
 
-		function renderStandoutLeaderboard(playerMap) {
-			const container = document.getElementById('leaderboard-list');
-			container.innerHTML = '';
+function renderStandoutLeaderboard(playerMap) {
+    const container = document.getElementById('leaderboard-list');
+    container.innerHTML = '';
 
-			// 1. Built-in Soccer Evaluation Sentiment Lexicon Matrix
-			const SENTIMENT_DICTIONARY = {
-				// High-Impact Positives (+2 to +3)
-				'elite': 3, 'standout': 3, 'excellent': 3, 'amazing': 3, 'dominant': 3, 'clinical': 3,
-				'intelligent': 2, 'composed': 2, 'sharp': 2, 'creative': 2, 'fast': 2, 'beast': 2,
-				'leader': 2, 'vocal': 2, 'disciplined': 2, 'strong': 2, 'reliable': 2, 'smooth': 2,
-				
-				// Solid Functional Positives (+1)
-				'good': 1, 'solid': 1, 'smart': 1, 'quick': 1, 'clean': 1, 'hardworker': 1,
-				'active': 1, 'improving': 1, 'steady': 1, 'hustle': 1, 'accurate': 1, 'heads-up': 1,
-				
-				// Development / Constructive Nuances (-1)
-				'raw': -1, 'heavy': -1, 'slow': -1, 'passive': -1, 'quiet': -1, 'impatient': -1,
-				'hesitant': -1, 'unlucky': -1, 'forcing': -1, 'forcing it': -1, 'recovering': -1,
-				
-				// Critical Flaws / Warnings (-2 to -3)
-				'struggling': -2, 'gassed': -2, 'tired': -2, 'weak': -2, 'lost': -2, 'clumsy': -2,
-				'careless': -2, 'flatfoot': -2, 'flatfooted': -2, 'selfish': -2, 'quits': -3, 'lazy': -3
-			};
+    // 1. Built-in Soccer Evaluation Sentiment Lexicon Matrix
+    const SENTIMENT_DICTIONARY = {
+        'elite': 3, 'standout': 3, 'excellent': 3, 'amazing': 3, 'dominant': 3, 'clinical': 3,
+        'intelligent': 2, 'composed': 2, 'sharp': 2, 'creative': 2, 'fast': 2, 'beast': 2,
+        'leader': 2, 'vocal': 2, 'disciplined': 2, 'strong': 2, 'reliable': 2, 'smooth': 2,
+        'good': 1, 'solid': 1, 'smart': 1, 'quick': 1, 'clean': 1, 'hardworker': 1,
+        'active': 1, 'improving': 1, 'steady': 1, 'hustle': 1, 'accurate': 1, 'heads-up': 1,
+        'raw': -1, 'heavy': -1, 'slow': -1, 'passive': -1, 'quiet': -1, 'impatient': -1,
+        'hesitant': -1, 'unlucky': -1, 'forcing': -1, 'forcing it': -1, 'recovering': -1,
+        'struggling': -2, 'gassed': -2, 'tired': -2, 'weak': -2, 'lost': -2, 'clumsy': -2,
+        'careless': -2, 'flatfoot': -2, 'flatfooted': -2, 'selfish': -2, 'quits': -3, 'lazy': -3
+    };
 
-			// 2. Map and compute specific composite scoring averages
-			const computedPlayersArray = Object.keys(playerMap).map(id => {
-				const notesArray = playerMap[id].notes || [];
-				let combinedText = notesArray.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"\n]/g, " ");
-				let tokens = combinedText.split(/\s+/);
-				
-				let sentimentScore = 0;
-				let matchCount = 0;
+    // 2. Map and compute specific composite scoring averages
+    const computedPlayersArray = Object.keys(playerMap).map(id => {
+        const rawHistory = playerMap[id].history || [];
+        const notesArray = playerMap[id].notes || [];
+        
+        // 1. Normalize history array to support objects containing: { rating, note, scout }
+        const evaluationHistory = rawHistory.length > 0 ? rawHistory : notesArray.map(n => ({
+            note: n,
+            rating: (playerMap[id].totalScore / playerMap[id].count),
+            scout: "Unknown Scout" // Fallback for legacy flat arrays
+        }));
+		
+		//debugger;
 
-				// Scan tokens against lexicon
-				tokens.forEach(word => {
-					if (SENTIMENT_DICTIONARY[word] !== undefined) {
-						sentimentScore += SENTIMENT_DICTIONARY[word];
-						matchCount++;
-					}
-				});
+        let combinedText = evaluationHistory.map(h => h.note).join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"\n]/g, " ");
+        let tokens = combinedText.split(/\s+/);
+        
+        let sentimentScore = 0;
+        let matchCount = 0;
 
-				// Calculate a bounded normalize benchmark between -5.0 and +5.0
-				let finalSentimentImpression = 0;
-				if (matchCount > 0) {
-					finalSentimentImpression = Math.max(-5, Math.min(5, (sentimentScore / matchCount) * 1.8));
-				}
+        tokens.forEach(word => {
+            if (SENTIMENT_DICTIONARY[word] !== undefined) {
+                sentimentScore += SENTIMENT_DICTIONARY[word];
+                matchCount++;
+            }
+        });
 
-				return {
-					id: id,
-					avgRating: (playerMap[id].totalScore / playerMap[id].count),
-					totalLogs: playerMap[id].count,
-					sentiment: finalSentimentImpression,
-					rawTextSnippet: notesArray.length > 0 ? notesArray[notesArray.length - 1] : "No qualitative notes."
-				}
-			});
+        let finalSentimentImpression = 0;
+        if (matchCount > 0) {
+            finalSentimentImpression = Math.max(-5, Math.min(5, (sentimentScore / matchCount) * 1.8));
+        }
 
-			// Score 1 is Elite Standout, so lowest average numeric rating wins the top spots
-			computedPlayersArray.sort((a, b) => a.avgRating - b.avgRating);
+        const newestEntry = evaluationHistory[evaluationHistory.length - 1] || { note: "No qualitative notes.", rating: 0, scout: "System" };
 
-			// 3. Render Dashboard Items Dynamically
-				computedPlayersArray.forEach((player, idx) => {
-					const card = document.createElement('div');
-					// Removed old margins, optimized for grid cell presentation layout
-					card.className = "bg-gray-50 rounded-xl p-3.5 border border-gray-150 flex flex-col justify-between gap-2 shadow-xs transition-all hover:border-gray-300";
-				
-				let badgeAccent = "bg-gray-200 text-gray-700";
-				if(idx === 0) badgeAccent = "bg-amber-100 text-amber-800 font-extrabold ring-1 ring-amber-400";
-				if(idx === 1) badgeAccent = "bg-slate-100 text-slate-700 font-bold";
-				if(idx === 2) badgeAccent = "bg-orange-100 text-orange-800";
+        return {
+            id: id,
+            avgRating: (playerMap[id].totalScore / playerMap[id].count),
+            totalLogs: playerMap[id].count,
+            sentiment: finalSentimentImpression,
+            rawTextSnippet: newestEntry.note,
+            history: evaluationHistory
+        }
+    });
 
-				// Determine descriptive sentiment metadata label configuration
-				let sentimentLabel = "Neutral Impression";
-				let sentimentColorClass = "text-gray-500";
-				let progressTheme = "bg-gray-300";
+    computedPlayersArray.sort((a, b) => a.avgRating - b.avgRating);
 
-				if (player.sentiment > 1.5) {
-					sentimentLabel = "Highly Positive Praise";
-					sentimentColorClass = "text-emerald-600";
-					progressTheme = "bg-emerald-500";
-				} else if (player.sentiment > 0.2) {
-					sentimentLabel = "Positive / Encouraging";
-					sentimentColorClass = "text-blue-600";
-					progressTheme = "bg-blue-400";
-				} else if (player.sentiment < -1.5) {
-					sentimentLabel = "Critical Development Warnings";
-					sentimentColorClass = "text-rose-600";
-					progressTheme = "bg-rose-600";
-				} else if (player.sentiment < -0.2) {
-					sentimentLabel = "Constructive Critiques Found";
-					sentimentColorClass = "text-amber-600";
-					progressTheme = "bg-amber-500";
-				}
+    // 3. Render Dashboard Items Dynamically
+    computedPlayersArray.forEach((player, idx) => {
+        const card = document.createElement('div');
+        card.className = "bg-gray-50 rounded-xl p-3.5 border border-gray-150 flex flex-col justify-between gap-2 shadow-xs transition-all hover:border-gray-300";
+        
+        let badgeAccent = "bg-gray-200 text-gray-700";
+        if(idx === 0) badgeAccent = "bg-amber-100 text-amber-800 font-extrabold ring-1 ring-amber-400";
+        if(idx === 1) badgeAccent = "bg-slate-100 text-slate-700 font-bold";
+        if(idx === 2) badgeAccent = "bg-orange-100 text-orange-800";
 
-				// Convert the -5 to +5 range into a percentage layout for the visual tracker bar
-				const horizontalFillPct = ((player.sentiment + 5) / 10) * 100;
+        let sentimentLabel = "Neutral Impression";
+        let sentimentColorClass = "text-gray-500";
+        let progressTheme = "bg-gray-300";
 
-				card.innerHTML = `
-					<!-- Top Metadata Row -->
-					<div class="flex justify-between items-center">
-						<div class="flex items-center gap-2">
-							<span class="text-xs ${badgeAccent} w-5 h-5 rounded-md flex items-center justify-center font-mono">#${idx + 1}</span>
-							<span class="text-sm font-black text-gray-900">Player #${player.id}</span>
-						</div>
-						<div class="text-right">
-							<span class="text-xs font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Avg Rating: ${player.avgRating.toFixed(1)}</span>
-						</div>
-					</div>
+        if (player.sentiment > 1.5) {
+            sentimentLabel = "Highly Positive Praise";
+            sentimentColorClass = "text-emerald-600";
+            progressTheme = "bg-emerald-500";
+        } else if (player.sentiment > 0.2) {
+            sentimentLabel = "Positive / Encouraging";
+            sentimentColorClass = "text-blue-600";
+            progressTheme = "bg-blue-400";
+        } else if (player.sentiment < -1.5) {
+            sentimentLabel = "Critical Development Warnings";
+            sentimentColorClass = "text-rose-600";
+            progressTheme = "bg-rose-600";
+        } else if (player.sentiment < -0.2) {
+            sentimentLabel = "Constructive Critiques Found";
+            sentimentColorClass = "text-amber-600";
+            progressTheme = "bg-amber-500";
+        }
 
-					<!-- Sentiment Visualization Slider Panel -->
-					<div class="bg-white border border-gray-200/60 rounded-xl p-2 mt-0.5">
-						<div class="flex justify-between items-center text-[10px] font-bold mb-1.5 uppercase tracking-wider">
-							<span class="${sentimentColorClass}">💬 Text Sentiment: ${sentimentLabel}</span>
-							<span class="font-mono text-gray-400">Score: ${player.sentiment > 0 ? '+' : ''}${player.sentiment.toFixed(1)}</span>
-						</div>
-						
-						<!-- Double-Sided Axis Grid Tracking Line -->
-						<div class="w-full bg-gray-100 h-2.5 rounded-full relative overflow-hidden">
-							<!-- Midpoint marker (Neutral Centerline anchor reference) -->
-							<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-300 z-10"></div>
-							<!-- Indicator Bar Fill -->
-							<div class="${progressTheme} h-full transition-all duration-500" style="width: ${horizontalFillPct}%"></div>
-						</div>
-					</div>
+        const horizontalFillPct = ((player.sentiment + 5) / 10) * 100;
+        const logPluralityLabel = player.totalLogs === 1 ? "log" : "logs";
 
-					<!-- Recent Log Fragment Feed Preview -->
-					<div class="text-[11px] text-gray-500 italic bg-white/40 px-2 py-1.5 rounded-lg border border-gray-100 truncate">
-						Latest: "${player.rawTextSnippet}"
-					</div>
-				`;
-				container.appendChild(card);
-			});
-		}
+        card.innerHTML = `
+            <!-- Top Metadata Row -->
+            <div class="flex justify-between items-center">
+                <button type="button" class="player-trigger flex items-center gap-2 group cursor-pointer border-0 bg-transparent text-left focus:outline-hidden">
+                    <span class="text-xs ${badgeAccent} w-5 h-5 rounded-md flex items-center justify-center font-mono group-hover:scale-105 transition-transform">#${idx + 1}</span>
+                    <span class="text-sm font-black text-gray-900 underline decoration-dotted decoration-gray-300 group-hover:text-indigo-600 group-hover:decoration-indigo-500 transition-all">Player #${player.id} 🔍</span>
+                </button>
+                <div class="text-right flex items-center gap-1.5">
+                    <span class="text-xs font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Avg: ${player.avgRating.toFixed(1)}</span>
+                    <span class="text-[10px] font-bold text-gray-400 bg-white border border-gray-200/60 px-1.5 py-0.5 rounded-md font-mono">${player.totalLogs} ${logPluralityLabel}</span>
+                </div>
+            </div>
+
+            <!-- Sentiment Slider Panel -->
+            <div class="bg-white border border-gray-200/60 rounded-xl p-2 mt-0.5">
+                <div class="flex justify-between items-center text-[10px] font-bold mb-1.5 uppercase tracking-wider">
+                    <span class="${sentimentColorClass}">💬 Text Sentiment: ${sentimentLabel}</span>
+                    <span class="font-mono text-gray-400">Score: ${player.sentiment > 0 ? '+' : ''}${player.sentiment.toFixed(1)}</span>
+                </div>
+                <div class="w-full bg-gray-100 h-2.5 rounded-full relative overflow-hidden">
+                    <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-300 z-10"></div>
+                    <div class="${progressTheme} h-full transition-all duration-500" style="width: ${horizontalFillPct}%"></div>
+                </div>
+            </div>
+
+            <!-- Recent Log Fragment Feed Preview -->
+            <div class="text-[11px] text-gray-500 italic bg-white/40 px-2 py-1.5 rounded-lg border border-gray-100 truncate">
+                Latest: "${player.rawTextSnippet}"
+            </div>
+        `;
+
+        card.querySelector('.player-trigger').addEventListener('click', () => {
+            // Set index value on the fly for subtitle tracking
+            player.rank = idx + 1;
+            openScoutingReportModal(player);
+        });
+
+        container.appendChild(card);
+    });
+}
+
+// 4. Modal Event Hookups & Open/Close State Managers
+const modalEl = document.getElementById('report-modal');
+const modalInner = modalEl ? modalEl.querySelector('.transform') : null;
+const closeModalBtn = document.getElementById('close-modal-btn');
+
+// 5. Updated Modal Builder with Per-Log Score Badges
+// 2. Updated Modal Builder with Per-Log Score Badges and Scout Attribution
+function openScoutingReportModal(player) {
+    const modalEl = document.getElementById('report-modal');
+    const modalInner = modalEl ? modalEl.querySelector('.transform') : null;
+    if (!modalEl) return;
+    
+    document.getElementById('modal-player-title').textContent = `Scouting Analysis: Player #${player.id}`;
+    document.getElementById('modal-player-subtitle').textContent = `Ranked #${player.rank}  |  Avg Rating: ${player.avgRating.toFixed(1)} (${player.totalLogs} total records)`;
+    
+    const reportsBox = document.getElementById('modal-reports-container');
+    reportsBox.innerHTML = '';
+    
+    if (!player.history || player.history.length === 0) {
+        reportsBox.innerHTML = `<div class="text-xs text-gray-400 italic text-center py-6 bg-white border border-gray-200 rounded-xl">No qualitative trial logs filed yet.</div>`;
+    } else {
+        // Reverse array to render most recent submissions at the top
+        [...player.history].reverse().forEach((item, index) => {
+            const reportRow = document.createElement('div');
+            reportRow.className = "bg-white border border-gray-200 p-3.5 rounded-xl shadow-xs relative flex flex-col gap-1.5";
+            
+            // Assign specific colors to individual score values
+            let scoreColorTheme = "bg-gray-100 text-gray-700 border-gray-200";
+            if (item.rating <= 1.5) {
+                scoreColorTheme = "bg-emerald-50 text-emerald-700 border-emerald-200/60 font-black";
+            } else if (item.rating <= 2.5) {
+                scoreColorTheme = "bg-blue-50 text-blue-700 border-blue-200/60 font-bold";
+            } else if (item.rating > 3.5) {
+                scoreColorTheme = "bg-rose-50 text-rose-700 border-rose-200/60";
+            }
+
+            // Sanitize or fallback the scout name string
+            const displayScout = item.scout && item.scout.trim() !== "" ? item.scout : "Anonymous Scout";
+
+            reportRow.innerHTML = `
+                <div class="flex justify-between items-center border-b border-gray-50 pb-1.5">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase font-mono tracking-wider">Slip #${player.history.length - index}</span>
+                        <span class="text-[10px] text-gray-300">•</span>
+                        <!-- Scout Attribution Badge -->
+                        <span class="text-[10px] font-bold text-indigo-600/80 bg-indigo-50/50 px-1.5 py-0.5 rounded">✍️ ${displayScout}</span>
+                    </div>
+                    
+                    <!-- Dynamic Individual Score Badge -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] text-gray-400 font-medium font-mono">Rating:</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded border ${scoreColorTheme}">
+                            ${Number(item.rating).toFixed(0)}
+                        </span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-700 leading-relaxed font-medium mt-0.5">"${item.note || 'No text submitted.'}"</p>
+            `;
+            reportsBox.appendChild(reportRow);
+        });
+    }
+    
+    // Animation trigger block
+    modalEl.classList.remove('hidden');
+    setTimeout(() => {
+        modalEl.classList.remove('opacity-0');
+        modalEl.classList.add('opacity-100');
+        if (modalInner) {
+            modalInner.classList.remove('scale-95');
+            modalInner.classList.add('scale-100');
+        }
+    }, 10);
+}
+
+function closeModal() {
+    if (!modalEl) return;
+    modalEl.classList.remove('opacity-100');
+    modalEl.classList.add('opacity-0');
+    if (modalInner) {
+        modalInner.classList.remove('scale-100');
+        modalInner.classList.add('scale-95');
+    }
+    setTimeout(() => {
+        modalEl.classList.add('hidden');
+    }, 200);
+}
+
+// Wire up closure triggers safely
+if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+if(modalEl) {
+    modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal();
+    });
+}
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalEl && !modalEl.classList.contains('hidden')) closeModal();
+});	
 
         function renderKeywordDensityCloud(textBlob) {
             const cloudContainer = document.getElementById('keyword-cloud');
