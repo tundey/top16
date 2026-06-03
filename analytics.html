@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top16 - Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cmask id='ballMask'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23ffffff'/%3E%3C/mask%3E%3Cg mask='url(%23ballMask)'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23f3f4f6'/%3E%3Cpath d='M12-1c3.5 4 3.5 10 0 14-3.5 4-3.5 10 0 14C6.5 24 3 18.5 3 12S6.5 0 12-1z' fill='%23059669' opacity='0.9'/%3E%3Cpath d='M12-1c-3.5 4-3.5 10 0 14 3.5 4 3.5 10 0 14 5.5-3 9-8.5 9-15s-3.5-10-8-14z' fill='%234f46e5' opacity='0.85'/%3E%3Cpath d='M12 13c2.5 3 5.5 5 5.5 8.5S14.5 26 12 26s-5.5-1.5-5.5-5 3.5-5.5 5.5-8.5z' fill='%239333ea' opacity='0.8'/%3E%3Cpath d='M12-1c1.5 5 4.5 8.5 9 9M12-1c-1.5 5-4.5 8.5-9 9M12 25c1.5-5 4.5-8.5 9-9M12 25c-1.5-5-4.5-8.5-9-9M3 12h18M12-1v26' stroke='%23ffffff' stroke-width='0.8' stroke-linecap='round' opacity='0.55'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='11.6' stroke='%231e293b' stroke-width='0.8' fill='none'/%3E%3C/svg%3E">
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 antialiased p-4 md:p-6 pb-12">
+
+    <!-- ========================================== -->
+    <!-- GATEKEEPER SIGN-IN & PASSCODE MODAL        -->
+    <!-- ========================================== -->
+    <div id="gatekeeper-modal" class="fixed inset-0 z-50 bg-gray-900/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl border border-gray-200 max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-black text-gray-900 tracking-tight mb-1">Admin Authorization Required</h2>
+            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to open the admin dashboard.</p>
+            
+            <form id="gatekeeper-form" onsubmit="verifyAdminPasscode(event)" class="text-left space-y-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Scout / Admin Name</label>
+                    <input type="text" id="gatekeeper-scout-name" placeholder="Coach John / Scout Sarah" required autocomplete="name"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Passcode</label>
+                    <input type="password" id="gatekeeper-passcode-input" placeholder="Secret Code" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">						
+                </div>
+                
+                <p id="gatekeeper-error-msg" class="text-xs text-rose-600 font-bold hidden text-center pt-1">⚠️ Access Denied. Incorrect Passcode.</p>
+                
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl transition duration-200 cursor-pointer mt-2 shadow-sm shadow-emerald-200">
+                    Enter Dashboard
+                </button>			
+            </form>
+        </div>
+    </div>
+	
+    <div id="admin-content-blur-wrapper" class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+            <div>
+				<h1 class="text-3xl font-black text-gray-900 tracking-tight">🏆 Top16 Analytics</h1>
+                <p class="text-xs text-gray-500">Real-Time Data Matrix & Semantic Text Mining</p>
+            </div>
+			
+            <!-- ACTION BUTTONS -->
+            <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                <a href="index.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    </svg>
+                    Scouting
+                </a>
+				
+                <a href="admin.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    </svg>
+                    Admin
+                </a>
+			
+                <div>
+                    <span class="text-[9px] text-gray-400 block font-semibold uppercase tracking-wider">Active Scout</span>
+                    <span id="active-admin-display" class="font-bold text-gray-700">Connecting...</span>
+                </div>
+				
+                <button onclick="handleAdminLogout()" title="Log out session" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-md text-rose-600 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                    </svg>
+                </button>				
+            </div>
+        </header>
+
+        <div id="loader" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent mb-2"></div>
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Compiling Tryout Metrics...</p>
+        </div>
+
+        <div id="dashboard-content" class="hidden space-y-6">
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Logs</span>
+                    <span id="metric-total-logs" class="text-2xl font-black text-gray-900 mt-1 block">0</span>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Unique Players</span>
+                    <span id="metric-unique-players" class="text-2xl font-black text-emerald-600 mt-1 block">0</span>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Average Rating</span>
+                    <span id="metric-avg-rating" class="text-2xl font-black text-indigo-600 mt-1 block">0.0</span>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Scouts</span>
+                    <span id="metric-active-scouts" class="text-2xl font-black text-purple-600 mt-1 block">0</span>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 shadow-xs">
+                <h2 class="text-sm font-black uppercase tracking-wider text-gray-900 mb-3 flex items-center gap-1.5">
+                    <span>🧠 Scout Semantic Text Analysis</span>
+                    <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase">NLP Extraction</span>
+                </h2>
+                <p class="text-xs text-gray-500 mb-4">Calculates keyword density patterns across all qualitative evaluation sheets to isolate team traits:</p>
+                
+                <div id="keyword-cloud" class="flex flex-wrap gap-2">
+                    </div>
+            </div>
+			
+			<div class="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6">
+				
+				<div>
+					<h3 class="text-xs font-black uppercase tracking-wider text-gray-900 mb-3 flex items-center gap-1.5">
+						<span>🗣️ Most Frequent Descriptive Words</span>
+					</h3>
+					<div class="overflow-x-auto">
+						<table class="w-full text-left text-xs">
+							<thead>
+								<tr class="border-b border-gray-200 text-gray-400 font-bold">
+									<th class="pb-2">Descriptive Word</th>
+									<th class="pb-2 text-right">Count</th>
+								</tr>
+							</thead>
+							<tbody id="top-words-table" class="divide-y divide-gray-100 font-medium text-gray-700">
+								</tbody>
+						</table>
+					</div>
+				</div>
+
+				<div>
+					<h3 class="text-xs font-black uppercase tracking-wider text-gray-900 mb-3 flex items-center gap-1.5">
+						<span>📋 Common Scout Phrases (2-Word Combinations)</span>
+					</h3>
+					<div class="overflow-x-auto">
+						<table class="w-full text-left text-xs">
+							<thead>
+								<tr class="border-b border-gray-200 text-gray-400 font-bold">
+									<th class="pb-2">Scouting Phrase</th>
+									<th class="pb-2 text-right">Count</th>
+								</tr>
+							</thead>
+							<tbody id="top-phrases-table" class="divide-y divide-gray-100 font-medium text-gray-700">
+								</tbody>
+						</table>
+					</div>
+				</div>
+
+			</div>			
+
+<!-- ROW 3: QUANTITATIVE SCORING DISTRIBUTIONS & EXPANDED SENTIMENT MATRIX -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+    <!-- 1. SCORE DENSITY RANGE PROFILE (NOW POSITIONED ON TOP) -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs md:col-span-2 flex flex-col justify-between">
+        <div>
+            <h2 class="text-sm font-black uppercase tracking-wider text-gray-900 mb-4 flex items-center gap-1.5">
+                <span>📊 Rating Score Spread Distribution</span>
+                <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-normal">Cohort Weight</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-emerald-600">Score 1 (Elite Base)</span>
+                        <span id="label-score-1">0% (0)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-score-1" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-amber-600">Score 2 (Average Pool)</span>
+                        <span id="label-score-2">0% (0)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-score-2" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-rose-600">Score 3 (Below Target)</span>
+                        <span id="label-score-3">0% (0)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div id="bar-score-3" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. PLAYER TRYOUT IMPRESSION MATRIX (NOW POSITIONED UNDER SPREAD) -->
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-xs md:col-span-2">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-100 pb-2 mb-3 gap-2">
+            <div>
+                <h2 class="text-sm font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                    <span>⭐ Player Tryout Impression Matrix</span>
+                </h2>
+                <p class="text-[11px] text-gray-400 font-medium">Cross-referencing quantitative rating sheets with qualitative linguistic tones</p>
+            </div>
+            <div class="text-[9px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg uppercase tracking-wider self-start sm:self-auto">
+                Sorted by Avg Score
+            </div>
+        </div>
+        
+        <!-- Grid wrapper inside the full-width card to list players side-by-side -->
+        <div id="leaderboard-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Instantiated dynamically by script module -->
+        </div>
+    </div>
+
+</div>
+
+        </div>
+    </div>
+
+    <script type="module">
+		import { db } from "./firebase-config.js";
+		import { getFirestore, collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";				
+		
+        let savedPasscodeHash = null;
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function fetchGatekeeperSecret() {
+            try {
+                const secretDocRef = doc(db, "secrets", "gatekeeper");
+                const secretSnap = await getDoc(secretDocRef);
+                if (secretSnap.exists()) {
+                    savedPasscodeHash = secretSnap.data().passcodeHash;
+                    
+                    // If already verified earlier this session, automatically pull their name and bypass
+                    const savedName = sessionStorage.getItem('admin_scout_name');
+                    if (sessionStorage.getItem('admin_authorized') === 'true' && savedName) {
+                        bypassGatekeeperUI(savedName);
+                        //initializeDataStream();
+                    }
+                }
+            } catch (err) {
+                console.error("Firestore Security Retrieval Error:", err);
+            }
+        }
+        fetchGatekeeperSecret();
+
+        window.verifyAdminPasscode = async function(event) {
+            event.preventDefault();
+            const nameField = document.getElementById('gatekeeper-scout-name');
+            const passcodeField = document.getElementById('gatekeeper-passcode-input');
+            const errorElement = document.getElementById('gatekeeper-error-msg');
+            
+            if (!savedPasscodeHash) {
+                alert("Security config loading... Please give it a brief second and try again.");
+                return;
+            }
+
+            const cleanName = nameField.value.trim();
+            const inputHash = await sha256(passcodeField.value);
+
+            if (inputHash === savedPasscodeHash) {
+                sessionStorage.setItem('admin_authorized', 'true');
+                sessionStorage.setItem('admin_scout_name', cleanName);
+                bypassGatekeeperUI(cleanName);
+                //initializeDataStream();
+            } else {
+                errorElement.classList.remove('hidden');
+                passcodeField.value = '';
+                passcodeField.focus();
+            }
+        }
+
+        function bypassGatekeeperUI(adminName) {
+            document.getElementById('gatekeeper-modal').classList.add('hidden');
+            document.getElementById('active-admin-display').textContent = adminName;
+            const content = document.getElementById('admin-content-blur-wrapper');
+            content.classList.remove('blur-sm', 'pointer-events-none');
+        }
+		
+
+        let rawLogs = [];
+
+        const SOCCER_LEXICON = [
+            { keyword: 'pace', label: 'Speed / Pace', theme: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+            { keyword: 'vision', label: 'Vision / Passing', theme: 'bg-blue-50 text-blue-700 border-blue-200' },
+            { keyword: 'touch', label: 'First Touch', theme: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+            { keyword: 'work', label: 'Work Rate / Engine', theme: 'bg-amber-50 text-amber-700 border-amber-200' },
+            { keyword: 'weak', label: 'Weak Foot Control', theme: 'bg-rose-50 text-rose-700 border-rose-200' },
+            { keyword: 'tackle', label: 'Defensive Tackling', theme: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+            { keyword: 'shot', label: 'Finishing / Shooting', theme: 'bg-purple-50 text-purple-700 border-purple-200' },
+            { keyword: 'composure', label: 'Composure on Ball', theme: 'bg-teal-50 text-teal-700 border-teal-200' }
+        ];
+
+        onSnapshot(collection(db, "evaluations"), (snapshot) => {
+            rawLogs = [];
+            snapshot.forEach((doc) => {
+                rawLogs.push(doc.data());
+            });
+
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+
+            processMetricsEngine();
+        });
+
+        function processMetricsEngine() {
+            if (rawLogs.length === 0) return;
+
+            let totalRatingSum = 0;
+            let score1Count = 0;
+            let score2Count = 0;
+            let score3Count = 0;
+
+            const playerMap = {};
+            const uniqueScouts = new Set();
+            let compiledNotesBlob = "";
+
+            rawLogs.forEach(item => {
+                const rating = parseInt(item.rating, 10);
+                totalRatingSum += rating;
+
+                if (rating === 1) score1Count++;
+                if (rating === 2) score2Count++;
+                if (rating === 3) score3Count++;
+
+                if (item.evaluatorName) uniqueScouts.add(item.evaluatorName.trim().toLowerCase());
+                if (item.notes) compiledNotesBlob += " " + item.notes.toLowerCase();
+
+                if (item.playerNumber) {
+                    if (!playerMap[item.playerNumber]) {
+                        playerMap[item.playerNumber] = { totalScore: 0, count: 0, notes: [] };
+                    }
+                    playerMap[item.playerNumber].totalScore += rating;
+                    playerMap[item.playerNumber].count++;
+                    if(item.notes) playerMap[item.playerNumber].notes.push(item.notes);
+                }
+            });
+
+            const totalCount = rawLogs.length;
+            const uniquePlayersCount = Object.keys(playerMap).length;
+
+            document.getElementById('metric-total-logs').textContent = totalCount;
+            document.getElementById('metric-unique-players').textContent = uniquePlayersCount;
+            document.getElementById('metric-avg-rating').textContent = (totalRatingSum / totalCount).toFixed(2);
+            document.getElementById('metric-active-scouts').textContent = uniqueScouts.size || 1;
+
+            updateProgressBar('score-1', score1Count, totalCount);
+            updateProgressBar('score-2', score2Count, totalCount);
+            updateProgressBar('score-3', score3Count, totalCount);
+
+            renderStandoutLeaderboard(playerMap);
+            renderKeywordDensityCloud(compiledNotesBlob);
+			renderAdvancedTextFrequencies(compiledNotesBlob);
+        }
+
+        function updateProgressBar(id, count, total) {
+            const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+            document.getElementById(`label-${id}`).textContent = `${percentage}% (${count})`;
+            document.getElementById(`bar-${id}`).style.width = `${percentage}%`;
+        }
+
+		function renderStandoutLeaderboard(playerMap) {
+			const container = document.getElementById('leaderboard-list');
+			container.innerHTML = '';
+
+			// 1. Built-in Soccer Evaluation Sentiment Lexicon Matrix
+			const SENTIMENT_DICTIONARY = {
+				// High-Impact Positives (+2 to +3)
+				'elite': 3, 'standout': 3, 'excellent': 3, 'amazing': 3, 'dominant': 3, 'clinical': 3,
+				'intelligent': 2, 'composed': 2, 'sharp': 2, 'creative': 2, 'fast': 2, 'beast': 2,
+				'leader': 2, 'vocal': 2, 'disciplined': 2, 'strong': 2, 'reliable': 2, 'smooth': 2,
+				
+				// Solid Functional Positives (+1)
+				'good': 1, 'solid': 1, 'smart': 1, 'quick': 1, 'clean': 1, 'hardworker': 1,
+				'active': 1, 'improving': 1, 'steady': 1, 'hustle': 1, 'accurate': 1, 'heads-up': 1,
+				
+				// Development / Constructive Nuances (-1)
+				'raw': -1, 'heavy': -1, 'slow': -1, 'passive': -1, 'quiet': -1, 'impatient': -1,
+				'hesitant': -1, 'unlucky': -1, 'forcing': -1, 'forcing it': -1, 'recovering': -1,
+				
+				// Critical Flaws / Warnings (-2 to -3)
+				'struggling': -2, 'gassed': -2, 'tired': -2, 'weak': -2, 'lost': -2, 'clumsy': -2,
+				'careless': -2, 'flatfoot': -2, 'flatfooted': -2, 'selfish': -2, 'quits': -3, 'lazy': -3
+			};
+
+			// 2. Map and compute specific composite scoring averages
+			const computedPlayersArray = Object.keys(playerMap).map(id => {
+				const notesArray = playerMap[id].notes || [];
+				let combinedText = notesArray.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"\n]/g, " ");
+				let tokens = combinedText.split(/\s+/);
+				
+				let sentimentScore = 0;
+				let matchCount = 0;
+
+				// Scan tokens against lexicon
+				tokens.forEach(word => {
+					if (SENTIMENT_DICTIONARY[word] !== undefined) {
+						sentimentScore += SENTIMENT_DICTIONARY[word];
+						matchCount++;
+					}
+				});
+
+				// Calculate a bounded normalize benchmark between -5.0 and +5.0
+				let finalSentimentImpression = 0;
+				if (matchCount > 0) {
+					finalSentimentImpression = Math.max(-5, Math.min(5, (sentimentScore / matchCount) * 1.8));
+				}
+
+				return {
+					id: id,
+					avgRating: (playerMap[id].totalScore / playerMap[id].count),
+					totalLogs: playerMap[id].count,
+					sentiment: finalSentimentImpression,
+					rawTextSnippet: notesArray.length > 0 ? notesArray[notesArray.length - 1] : "No qualitative notes."
+				}
+			});
+
+			// Score 1 is Elite Standout, so lowest average numeric rating wins the top spots
+			computedPlayersArray.sort((a, b) => a.avgRating - b.avgRating);
+
+			// 3. Render Dashboard Items Dynamically
+				computedPlayersArray.forEach((player, idx) => {
+					const card = document.createElement('div');
+					// Removed old margins, optimized for grid cell presentation layout
+					card.className = "bg-gray-50 rounded-xl p-3.5 border border-gray-150 flex flex-col justify-between gap-2 shadow-xs transition-all hover:border-gray-300";
+				
+				let badgeAccent = "bg-gray-200 text-gray-700";
+				if(idx === 0) badgeAccent = "bg-amber-100 text-amber-800 font-extrabold ring-1 ring-amber-400";
+				if(idx === 1) badgeAccent = "bg-slate-100 text-slate-700 font-bold";
+				if(idx === 2) badgeAccent = "bg-orange-100 text-orange-800";
+
+				// Determine descriptive sentiment metadata label configuration
+				let sentimentLabel = "Neutral Impression";
+				let sentimentColorClass = "text-gray-500";
+				let progressTheme = "bg-gray-300";
+
+				if (player.sentiment > 1.5) {
+					sentimentLabel = "Highly Positive Praise";
+					sentimentColorClass = "text-emerald-600";
+					progressTheme = "bg-emerald-500";
+				} else if (player.sentiment > 0.2) {
+					sentimentLabel = "Positive / Encouraging";
+					sentimentColorClass = "text-blue-600";
+					progressTheme = "bg-blue-400";
+				} else if (player.sentiment < -1.5) {
+					sentimentLabel = "Critical Development Warnings";
+					sentimentColorClass = "text-rose-600";
+					progressTheme = "bg-rose-600";
+				} else if (player.sentiment < -0.2) {
+					sentimentLabel = "Constructive Critiques Found";
+					sentimentColorClass = "text-amber-600";
+					progressTheme = "bg-amber-500";
+				}
+
+				// Convert the -5 to +5 range into a percentage layout for the visual tracker bar
+				const horizontalFillPct = ((player.sentiment + 5) / 10) * 100;
+
+				card.innerHTML = `
+					<!-- Top Metadata Row -->
+					<div class="flex justify-between items-center">
+						<div class="flex items-center gap-2">
+							<span class="text-xs ${badgeAccent} w-5 h-5 rounded-md flex items-center justify-center font-mono">#${idx + 1}</span>
+							<span class="text-sm font-black text-gray-900">Player #${player.id}</span>
+						</div>
+						<div class="text-right">
+							<span class="text-xs font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Avg Rating: ${player.avgRating.toFixed(1)}</span>
+						</div>
+					</div>
+
+					<!-- Sentiment Visualization Slider Panel -->
+					<div class="bg-white border border-gray-200/60 rounded-xl p-2 mt-0.5">
+						<div class="flex justify-between items-center text-[10px] font-bold mb-1.5 uppercase tracking-wider">
+							<span class="${sentimentColorClass}">💬 Text Sentiment: ${sentimentLabel}</span>
+							<span class="font-mono text-gray-400">Score: ${player.sentiment > 0 ? '+' : ''}${player.sentiment.toFixed(1)}</span>
+						</div>
+						
+						<!-- Double-Sided Axis Grid Tracking Line -->
+						<div class="w-full bg-gray-100 h-2.5 rounded-full relative overflow-hidden">
+							<!-- Midpoint marker (Neutral Centerline anchor reference) -->
+							<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-300 z-10"></div>
+							<!-- Indicator Bar Fill -->
+							<div class="${progressTheme} h-full transition-all duration-500" style="width: ${horizontalFillPct}%"></div>
+						</div>
+					</div>
+
+					<!-- Recent Log Fragment Feed Preview -->
+					<div class="text-[11px] text-gray-500 italic bg-white/40 px-2 py-1.5 rounded-lg border border-gray-100 truncate">
+						Latest: "${player.rawTextSnippet}"
+					</div>
+				`;
+				container.appendChild(card);
+			});
+		}
+
+        function renderKeywordDensityCloud(textBlob) {
+            const cloudContainer = document.getElementById('keyword-cloud');
+            cloudContainer.innerHTML = '';
+
+            let keywordsFoundCount = 0;
+
+            SOCCER_LEXICON.forEach(trait => {
+                const regex = new RegExp(trait.keyword, 'gi');
+                const matchingInstances = (textBlob.match(regex) || []).length;
+
+                if (matchingInstances > 0) {
+                    keywordsFoundCount++;
+                    const badge = document.createElement('div');
+                    badge.className = `px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2 shadow-xs transition transform hover:scale-102 ${trait.theme}`;
+                    badge.innerHTML = `
+                        <span>${trait.label}</span>
+                        <span class="bg-white/80 px-1.5 py-0.5 rounded-md font-mono text-[10px] font-black">${matchingInstances}x</span>
+                    `;
+                    cloudContainer.appendChild(badge);
+                }
+            });
+
+            if (keywordsFoundCount === 0) {
+                cloudContainer.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Analyzing typed logs... No matching structural traits caught yet.</p>`;
+            }
+        }
+		
+function renderAdvancedTextFrequencies(rawTextBlob) {
+    // 1. Define common filler words to ignore (Stop Words)
+    const stopWords = new Set([
+        'the', 'a', 'and', 'to', 'is', 'in', 'of', 'for', 'with', 'on', 'at', 'by', 'an', 
+        'this', 'that', 'player', 'players', 'number', 'has', 'but', 'he', 'she', 'they', 
+        'his', 'her', 'good', 'great', 'very', 'shows', 'needs', 'well', 'was', 'not', 'can'
+    ]);
+
+    // Clean up punctuation, convert to lowercase, and split into clean text tokens
+    const cleanTokens = rawTextBlob
+        .toLowerCase()
+        .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"\n]/g, " ")
+        .split(/\s+/)
+        .filter(token => token.length > 2); // Exclude ultra-short trailing characters
+
+    const wordCounts = {};
+    const phraseCounts = {};
+
+    // 2. Count frequencies for Single Descriptive Words & Two-Word Bigrams
+    for (let i = 0; i < cleanTokens.length; i++) {
+        const currentWord = cleanTokens[i];
+
+        // Process Single Words (skip if it's a filler/stop word)
+        if (!stopWords.has(currentWord)) {
+            wordCounts[currentWord] = (wordCounts[currentWord] || 0) + 1;
+        }
+
+        // Process Two-Word Phrases (Bigrams) if a next word exists
+        if (i < cleanTokens.length - 1) {
+            const nextWord = cleanTokens[i + 1];
+            // Only capture the phrase if neither word is a standalone filler word
+            if (!stopWords.has(currentWord) && !stopWords.has(nextWord)) {
+                const combinedPhrase = `${currentWord} ${nextWord}`;
+                phraseCounts[combinedPhrase] = (phraseCounts[combinedPhrase] || 0) + 1;
+            }
+        }
+    }
+
+    // 3. Sort arrays descending by count frequency, slice top 5 elements
+    const sortedWords = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const sortedPhrases = Object.entries(phraseCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    // 4. Render Single Words Table Data
+    const wordsTableBody = document.getElementById('top-words-table');
+    wordsTableBody.innerHTML = '';
+    if (sortedWords.length === 0) {
+        wordsTableBody.innerHTML = `<tr><td colspan="2" class="py-3 text-gray-400 italic">No descriptive terms analyzed yet.</td></tr>`;
+    } else {
+        sortedWords.forEach(([word, count]) => {
+            const row = document.createElement('tr');
+            row.className = "border-b border-gray-50 last:border-0";
+            row.innerHTML = `
+                <td class="py-2.5 capitalize text-gray-900 font-bold">${word}</td>
+                <td class="py-2.5 text-right font-mono font-bold text-gray-600">
+                    <span class="bg-gray-100 px-2 py-1 rounded-md text-[11px]">${count}x</span>
+                </td>
+            `;
+            wordsTableBody.appendChild(row);
+        });
+    }
+
+    // 5. Render 2-Word Scouting Phrases Table Data
+    const phrasesTableBody = document.getElementById('top-phrases-table');
+    phrasesTableBody.innerHTML = '';
+    if (sortedPhrases.length === 0) {
+        phrasesTableBody.innerHTML = `<tr><td colspan="2" class="py-3 text-gray-400 italic">No recurring multi-word phrases found yet.</td></tr>`;
+    } else {
+        sortedPhrases.forEach(([phrase, count]) => {
+            const row = document.createElement('tr');
+            row.className = "border-b border-gray-50 last:border-0";
+            row.innerHTML = `
+                <td class="py-2.5 capitalize text-gray-900 font-semibold italic">"${phrase}"</td>
+                <td class="py-2.5 text-right font-mono font-bold text-indigo-600">
+                    <span class="bg-indigo-50 px-2 py-1 rounded-md text-[11px]">${count}x</span>
+                </td>
+            `;
+            phrasesTableBody.appendChild(row);
+        });
+    }
+}		
+    </script>
+</body>
+</html>

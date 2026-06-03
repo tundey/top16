@@ -6,6 +6,7 @@
     <title>Top16 - Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 	<link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cmask id='ballMask'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23ffffff'/%3E%3C/mask%3E%3Cg mask='url(%23ballMask)'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23f3f4f6'/%3E%3Cpath d='M12-1c3.5 4 3.5 10 0 14-3.5 4-3.5 10 0 14C6.5 24 3 18.5 3 12S6.5 0 12-1z' fill='%23059669' opacity='0.9'/%3E%3Cpath d='M12-1c-3.5 4-3.5 10 0 14 3.5 4 3.5 10 0 14 5.5-3 9-8.5 9-15s-3.5-10-8-14z' fill='%234f46e5' opacity='0.85'/%3E%3Cpath d='M12 13c2.5 3 5.5 5 5.5 8.5S14.5 26 12 26s-5.5-1.5-5.5-5 3.5-5.5 5.5-8.5z' fill='%239333ea' opacity='0.8'/%3E%3Cpath d='M12-1c1.5 5 4.5 8.5 9 9M12-1c-1.5 5-4.5 8.5-9 9M12 25c1.5-5 4.5-8.5 9-9M12 25c-1.5-5-4.5-8.5-9-9M3 12h18M12-1v26' stroke='%23ffffff' stroke-width='0.8' stroke-linecap='round' opacity='0.55'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='11.6' stroke='%231e293b' stroke-width='0.8' fill='none'/%3E%3C/svg%3E">	
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen relative">
 
@@ -20,7 +21,7 @@
                 </svg>
             </div>
             <h2 class="text-xl font-black text-gray-900 tracking-tight mb-1">Admin Authorization Required</h2>
-            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to open the command center.</p>
+            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to open the admin dashboard.</p>
             
             <form id="gatekeeper-form" onsubmit="verifyAdminPasscode(event)" class="text-left space-y-3">
                 <div>
@@ -49,7 +50,7 @@
         <!-- HEADER -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-200 pb-4 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-gray-900 tracking-tight">🏆 Top16 Command Center</h1>
+                <h1 class="text-3xl font-black text-gray-900 tracking-tight">🏆 Top16 Admin Dashboard</h1>
             </div>
             
             <!-- ACTION BUTTONS -->
@@ -58,14 +59,21 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
                     </svg>
-                    Go to Evaluation Page
+                    Scouting
+                </a>
+				
+                <a href="analytics.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    </svg>
+                    Analytics
                 </a>
 
                 <button onclick="exportToExcel()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl transition duration-150 shadow-sm shadow-emerald-100 flex items-center justify-center gap-2 cursor-pointer text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                     </svg>
-                    Export to Excel (.csv)
+                    Export (.csv)
                 </button>
 				
                 <div>
@@ -140,26 +148,15 @@
             </div>
         </main>
     </template>
+    <!-- Keep all your existing rows, phrase leaderboards, and rating distribution elements exactly right here -->
+</div>
 
     <!-- ========================================== -->
     <!-- FIREBASE FIRESTORE DATA STREAM ENGINE       -->
     <!-- ========================================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNL6Ik1-uFaELPwgUSTxLgVbgv_WjxplU",
-            authDomain: "top16-c8cea.firebaseapp.com",
-            projectId: "top16-c8cea",
-            storageBucket: "top16-c8cea.firebasestorage.app",
-            messagingSenderId: "1082284210993",
-            appId: "1:1082284210993:web:0166eacedc2d054d174e10",
-            measurementId: "G-DRL91CYDD5"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <script type="module">	
+		import { db } from "./firebase-config.js";
+		import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";			
 
         let globalEvaluationsList = [];
         let currentSortColumn = 'timestampRaw';
