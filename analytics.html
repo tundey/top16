@@ -379,7 +379,7 @@
             document.getElementById('loader').classList.add('hidden');
             document.getElementById('dashboard-content').classList.remove('hidden');
 
-            //processMetricsEngine();
+            processMetricsEngine();
         });
 
         function processMetricsEngine() {
@@ -477,8 +477,6 @@ function renderStandoutLeaderboard(playerMap) {
             scout: "Unknown Scout" // Fallback for legacy flat arrays
         }));
 		
-		//debugger;
-
         let combinedText = evaluationHistory.map(h => h.note).join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"\n]/g, " ");
         let tokens = combinedText.split(/\s+/);
         
@@ -580,7 +578,6 @@ function renderStandoutLeaderboard(playerMap) {
         card.querySelector('.player-trigger').addEventListener('click', () => {
             // Set index value on the fly for subtitle tracking
             player.rank = idx + 1;
-			debugger;
             openScoutingReportModal(player);
         });
 
@@ -596,7 +593,6 @@ const closeModalBtn = document.getElementById('close-modal-btn');
 // 5. Updated Modal Builder with Per-Log Score Badges
 // 2. Updated Modal Builder with Per-Log Score Badges and Scout Attribution
 function openScoutingReportModal(player) {
-debugger;
     const modalEl = document.getElementById('report-modal');
     const modalInner = modalEl ? modalEl.querySelector('.transform') : null;
     if (!modalEl) return;
@@ -945,7 +941,6 @@ function renderDraftPriorityRankings(playerMap) {
             // Prevent trigger if clicking on a selectable sub-badge specifically
             if (typeof openScoutingReportModal === 'function') {
                 player.rank = index + 1;
-				debugger;
                 openScoutingReportModal(player);
             }
         });
