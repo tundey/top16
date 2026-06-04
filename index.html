@@ -56,7 +56,7 @@
                 </button>
             </div>
         </header>
-
+<!--
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 text-xs text-blue-800">
             <span class="font-bold uppercase tracking-wider text-blue-700 block mb-1">👀 What to look for:</span>
             <ul class="list-disc list-inside space-y-0.5 text-blue-900">
@@ -65,7 +65,7 @@
                 <li><strong class="text-gray-900">3 (Below):</strong> Struggles under pressure, chasing the game, heavy touches.</li>
             </ul>
         </div>
-
+-->
 		<!-- PROTECTED ROSTER RANGE NOTICE BANNER -->
 		<div class="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 shadow-xs">
 			<div class="text-amber-600 shrink-0 mt-0.5">
@@ -90,10 +90,11 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Player Jersey #</label>
                     <div class="flex gap-2">
                         <input type="number" id="player-number" required placeholder="e.g. 123" min="1" max="999999" class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg font-bold text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
-                        
+                        <!--
                         <select id="existing-players-dropdown" onchange="selectExistingPlayer(this.value)" class="bg-gray-100 border border-gray-300 rounded-xl px-2 text-xs font-semibold text-gray-700 max-w-[120px] focus:outline-none">
                             <option value="">Active (#)</option>
                         </select>
+						-->
                     </div>
                 </div>
 
@@ -413,7 +414,7 @@
                     }
                 });
                 
-                updateDropdownUI();
+                //updateDropdownUI();
                 updateHistoryUI();
             });
         }
