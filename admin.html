@@ -176,7 +176,7 @@
                 const secretDocRef = doc(db, "secrets", "gatekeeper");
                 const secretSnap = await getDoc(secretDocRef);
                 if (secretSnap.exists()) {
-                    savedPasscodeHash = secretSnap.data().passcodeHash;
+                    savedPasscodeHash = secretSnap.data().adminPasscodeHash;
                     
                     // If already verified earlier this session, automatically pull their name and bypass
                     const savedName = sessionStorage.getItem('admin_scout_name');
