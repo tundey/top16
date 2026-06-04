@@ -97,25 +97,58 @@
                     </div>
                 </div>
 
-                <div class="mb-5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Rating</label>
-                    <div class="grid grid-cols-3 gap-3">
-                        <button type="button" onclick="setRating(1)" id="btn-rating-1" class="rating-btn bg-gray-50 border-2 border-gray-200 hover:border-emerald-500 rounded-xl py-3 text-center transition cursor-pointer">
-                            <span class="block text-2xl font-black text-emerald-600">1</span>
-                            <span class="text-[10px] uppercase font-bold text-gray-500">Best</span>
-                        </button>
-                        <button type="button" onclick="setRating(2)" id="btn-rating-2" class="rating-btn bg-gray-50 border-2 border-gray-200 hover:border-amber-500 rounded-xl py-3 text-center transition cursor-pointer">
-                            <span class="block text-2xl font-black text-amber-600">2</span>
-                            <span class="text-[10px] uppercase font-bold text-gray-500">Avg</span>
-                        </button>
-                        <button type="button" onclick="setRating(3)" id="btn-rating-3" class="rating-btn bg-gray-50 border-2 border-gray-200 hover:border-rose-500 rounded-xl py-3 text-center transition cursor-pointer">
-                            <span class="block text-2xl font-black text-rose-600">3</span>
-                            <span class="text-[10px] uppercase font-bold text-gray-500">Below</span>
-                        </button>
-                    </div>
-                    <input type="hidden" id="selected-rating" required>
-                </div>
-				
+<!-- DEPENDENT PERFORMANCE SELECTOR MODULE (STARTS UNSELECTED) -->
+<div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm max-w-2xl mx-auto w-full">
+    
+    <!-- STAGE 1: BROAD CATEGORY PICKER -->
+    <div class="mb-5">
+        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider font-mono mb-2">
+            Step 1: Select Core Performance Category
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" id="tier-btn-1" onclick="window.selectMainTier(1)" class="py-3 px-4 border border-gray-200 bg-white text-gray-700 font-mono font-bold rounded-xl text-sm transition-all hover:border-gray-400 focus:outline-none w-full">
+                Category 1
+                <span class="block text-[10px] font-medium text-gray-400 font-sans mt-0.5 uppercase">Standout / Elite</span>
+            </button>
+            <button type="button" id="tier-btn-2" onclick="window.selectMainTier(2)" class="py-3 px-4 border border-gray-200 bg-white text-gray-700 font-mono font-bold rounded-xl text-sm transition-all hover:border-gray-400 focus:outline-none w-full">
+                Category 2
+                <span class="block text-[10px] font-medium text-gray-400 font-sans mt-0.5 uppercase">Core / Developing</span>
+            </button>
+            <button type="button" id="tier-btn-3" onclick="window.selectMainTier(3)" class="py-3 px-4 border border-gray-200 bg-white text-gray-700 font-mono font-bold rounded-xl text-sm transition-all hover:border-gray-400 focus:outline-none w-full">
+                Category 3
+                <span class="block text-[10px] font-medium text-gray-400 font-sans mt-0.5 uppercase">Immediate Review</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- STAGE 2: CONDITIONAL SUB-LEVEL CHIPS -->
+    <div class="mb-5">
+        <label class="block text-xs font-black text-gray-400 uppercase tracking-wider font-mono mb-2">
+            Step 2: Assign Level Refinement Score
+        </label>
+        <!-- Form starts completely empty -->
+        <input type="hidden" id="stored-main-rating" value="">
+        <input type="hidden" id="stored-sub-rating" value="">
+        
+        <div id="sub-level-container" class="flex flex-wrap gap-2.5">
+            <div class="text-xs text-gray-400 italic py-2">Please pick a core category above to open refinement levels.</div>
+        </div>
+    </div>
+
+    <!-- CONTEXTUAL EVALUATION INSIGHT DISPLAY BOX -->
+    <div id="display-banner-box" class="bg-gray-50 border border-gray-150 rounded-xl p-5 text-center transition-all duration-150 border-dashed">
+        <div id="display-badge" class="inline-block text-[10px] font-black font-mono tracking-wider px-2 py-0.5 rounded-md bg-gray-200 text-gray-600 mb-1.5 uppercase">
+            No Rating
+        </div>
+        <div id="display-headline" class="text-xs font-black text-gray-400 uppercase font-mono tracking-wide">
+            Awaiting Coach Input
+        </div>
+        <p id="display-description" class="text-[11px] text-gray-400 italic mt-1 leading-relaxed max-w-lg mx-auto">
+            Tap a performance category block above to begin your evaluation log.
+        </p>
+    </div>
+</div>
+				<br/>
 				<div class="mb-5">
 					<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes</label>
 					
@@ -235,12 +268,13 @@
 			
 			// 1. Build the CSV Header Configuration
 			let csvContent = "data:text/csv;charset=utf-8,";
-			csvContent += "Player Jersey Number,Scout Rating,Timestamp,Scouting Notes\r\n";
+			csvContent += "Player Jersey Number,Scout Rating,SubRating,Timestamp,Scouting Notes\r\n";
 
 			// 2. Loop and sanitize evaluation rows
 			myEvaluations.forEach(item => {
 				const playerNum = item.playerNumber;
 				const rating = item.rating;
+				const subRating = item.subRating;
 				
 				// Format time smoothly for spreadsheet systems
 				const timeStr = item.timestamp ? item.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
@@ -248,7 +282,7 @@
 				// Escape quotes inside custom text notes to prevent splitting columns layout errors
 				const cleanNotes = item.notes ? `"${item.notes.replace(/"/g, '""')}"` : '""';
 
-				csvContent += `${playerNum},${rating},${timeStr},${cleanNotes}\r\n`;
+				csvContent += `${playerNum},${rating},${subRating},${timeStr},${cleanNotes}\r\n`;
 			});
 
 			// 3. Compile Data Stream URI
@@ -301,11 +335,7 @@
 
                 currentRating = null;
                 document.getElementById('evaluation-form').reset();
-                document.getElementById('selected-rating').value = '';
-                document.querySelectorAll('.rating-btn').forEach(btn => {
-                    btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
-                    btn.classList.add('border-gray-200', 'bg-gray-50');
-                });
+                window.selectMainTier(0);
 
                 document.getElementById('app-screen').classList.add('hidden');
                 document.getElementById('auth-screen').classList.remove('hidden');
@@ -341,24 +371,14 @@
 
         window.setRating = function(rating) {
             currentRating = rating;
-            document.getElementById('selected-rating').value = rating;
-            
-            document.querySelectorAll('.rating-btn').forEach(btn => {
-                btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
-                btn.classList.add('border-gray-200', 'bg-gray-50');
-            });
-
-            const activeBtn = document.getElementById(`btn-rating-${rating}`);
-            activeBtn.classList.remove('border-gray-200', 'bg-gray-50');
-            activeBtn.classList.add('bg-gray-100');
-            if (rating === 1) activeBtn.classList.add('border-emerald-500');
-            if (rating === 2) activeBtn.classList.add('border-amber-500');
-            if (rating === 3) activeBtn.classList.add('border-rose-500');
+            window.selectMainTier(rating);
         }
 
-        window.loadPlayerToForm = function(playerNum, rating, notes) {
+        window.loadPlayerToForm = function(playerNum, rating, subRating, notes) {
+		debugger;
             document.getElementById('player-number').value = playerNum;
             setRating(rating);
+			updateActiveDisplay(subRating);
             document.getElementById('player-notes').value = notes || "";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -436,7 +456,7 @@
 			myEvaluations.forEach(item => {
 				const card = document.createElement('div');
 				card.className = "bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center cursor-pointer hover:border-gray-400 shadow-xs transition active:scale-99";
-				card.setAttribute('onclick', `loadPlayerToForm('${item.playerNumber}', ${item.rating}, \`${item.notes.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)`);
+				card.setAttribute('onclick', `loadPlayerToForm('${item.playerNumber}', ${item.rating}, ${item.subRating}, \`${item.notes.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)`);
 				
 				let ratingColor = "text-emerald-600";
 				if(item.rating === 2) ratingColor = "text-amber-600";
@@ -454,7 +474,7 @@
 					<div class="flex-1 min-w-0 pr-2">
 						<div class="flex items-baseline gap-2">
 							<span class="text-base font-black text-gray-900">#${item.playerNumber}</span>
-							<span class="text-xs font-bold ${ratingColor}">Score: ${item.rating}</span>
+							<span class="text-xs font-bold ${ratingColor}">Score: ${item.rating} (sub rating: ${item.subRating})</span>
 						</div>
 						<p class="text-xs text-gray-500 truncate mt-0.5">${item.notes ? item.notes : '<span class="italic text-gray-300">No notes</span>'}</p>
 					</div>
@@ -483,9 +503,15 @@
 			}			
             
             const evaluator = sessionStorage.getItem('evaluatorName');
-            const hashedCode = sessionStorage.getItem('tryoutHashedPasscode');
+			const hashedCode = sessionStorage.getItem('tryoutHashedPasscode');
             const playerNumber = document.getElementById('player-number').value.trim();
             const notes = document.getElementById('player-notes').value.trim();
+
+			const ratingValue = parseInt(document.getElementById('stored-main-rating').value);
+			const subRatingValue = parseFloat(document.getElementById('stored-sub-rating').value);
+			const headlineText = document.getElementById('display-headline').textContent
+			.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDFFF]/g, '')
+			.trim();
             
             if (!evaluator || !hashedCode) {
                 alert("Session context missing. Please log in again.");
@@ -494,35 +520,139 @@
                 return;
             }
 
-            if (!currentRating) {
-                alert("Please click a score (1, 2, or 3) before submitting.");
-                return;
-            }
+// Add this safety block right at the top of your Firebase submission function
+const storedRatingText = document.getElementById('stored-sub-rating').value;
+
+if (!storedRatingText || storedRatingText === "") {
+    alert("⚠️ Missing Selection: Please choose a Performance Level evaluation tier before saving.");
+    return; // Halt save operation
+}
+
+const finalRatingValue = parseFloat(storedRatingText);
 
             addDoc(collection(db, 'evaluations'), {
                 evaluator: evaluator,
                 playerNumber: parseInt(playerNumber),
-                rating: parseInt(currentRating),
-                notes: notes,
-                passcodeHash: hashedCode, 
+                rating: ratingValue,
+				subRating: subRatingValue,
+				headlineText: headlineText,
+                notes: notes,                
+				passcodeHash: hashedCode, 		// Must send this otherwise Firebase rules will block writing
                 timestamp: serverTimestamp()
             }).then(() => {
                 document.getElementById('player-number').value = '';
                 document.getElementById('player-notes').value = '';
                 currentRating = null;
-                document.getElementById('selected-rating').value = '';
-                document.querySelectorAll('.rating-btn').forEach(btn => {
-                    btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
-                    btn.classList.add('border-gray-200', 'bg-gray-50');
-                });
+				selectMainTier(0);			// clear ratings
                 
                 document.getElementById('player-number').focus();
             }).catch((err) => {
+			debugger;
                 alert("Permission Denied: Server rule validation failed.");
                 sessionStorage.clear();
                 window.location.reload();
             });
         }
+		
+const PERFORMANCE_MATRIX = {
+    1.0: { headline: "🎯 Impact Standout / Game Changer", desc: "Clinical, high-tempo play. Consistently wins 1v1 transitions and drives possession flawlessly.", classes: "bg-rose-500 text-white" },
+    1.5: { headline: "💎 Reliable Competitor", desc: "Sharp touches, intelligent tracking lines, and vocal communication within the team framework.", classes: "bg-indigo-500 text-white" },
+    2.0: { headline: "🟢 Stable Core Roster Asset", desc: "Executes standard patterns reliably. Shows positive work ethic and steady, head-up tracking.", classes: "bg-emerald-500 text-white" },
+    2.5: { headline: "⚠️ Constructive Development Area", desc: "A bit passive or hesitant. Possesses raw athletic tools but needs technical work on positional awareness.", classes: "bg-amber-500 text-white" },
+    3.0: { headline: "🚨 Immediate Technical Review Needed", desc: "Flat-footed recovery or heavy first touches. Struggling significantly with drill pacing or stamina levels today.", classes: "bg-rose-50 text-rose-700 border border-rose-200" }
+};
+
+const TIER_ROUTING_MAP = {
+    1: [1.0, 1.5],
+    2: [2.0, 2.5],
+    3: [3.0]
+};
+
+window.selectMainTier = function(tier) {
+    document.getElementById('stored-main-rating').value = tier;
+    
+    // Highlight Category row buttons
+    [1, 2, 3].forEach(t => {
+        const btn = document.getElementById(`tier-btn-${t}`);
+        if (!btn) return;
+        if (t === tier) {
+            btn.className = "py-3 px-4 border-2 border-indigo-600 bg-indigo-50 text-indigo-700 font-mono font-black rounded-xl text-sm transition-all focus:outline-none w-full";
+            btn.querySelector('span').className = "block text-[10px] font-bold text-indigo-400 font-sans mt-0.5 uppercase";
+        } else {
+            btn.className = "py-3 px-4 border border-gray-200 bg-white text-gray-700 font-mono font-bold rounded-xl text-sm transition-all hover:border-gray-400 focus:outline-none w-full";
+            btn.querySelector('span').className = "block text-[10px] font-medium text-gray-400 font-sans mt-0.5 uppercase";
+        }
+    });
+
+    renderSubLevelChips(tier);
+};
+
+function renderSubLevelChips(tier) {
+    const container = document.getElementById('sub-level-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const allowedValues = TIER_ROUTING_MAP[tier] || [];
+
+    // Auto-select the first item in the newly activated category row
+    const defaultSubValue = allowedValues[0];
+    updateActiveDisplay(defaultSubValue);
+
+    allowedValues.forEach(val => {
+        const subBtn = document.createElement('button');
+        subBtn.type = "button";
+        subBtn.id = `sub-chip-${val.toFixed(1)}`;
+        subBtn.textContent = val.toFixed(1);
+        subBtn.className = "px-5 py-2 font-mono text-xs font-black rounded-xl transition-all border select-none focus:outline-none";
+        
+        subBtn.addEventListener('click', () => {
+            updateActiveDisplay(val);
+        });
+
+        container.appendChild(subBtn);
+    });
+
+    highlightSubChip(defaultSubValue, allowedValues);
+}
+
+function updateActiveDisplay(subValue) {
+    document.getElementById('stored-sub-rating').value = subValue;
+    
+    const bannerBox = document.getElementById('display-banner-box');
+    const badge = document.getElementById('display-badge');
+    const headline = document.getElementById('display-headline');
+    const desc = document.getElementById('display-description');
+    
+    const data = PERFORMANCE_MATRIX[subValue];
+    if (data && badge && headline && desc) {
+        // Upgrade display banner background from default plain styles
+        if (bannerBox) bannerBox.className = "bg-white border border-gray-200 rounded-xl p-5 text-center transition-all duration-150";
+        
+        badge.textContent = `SCORE: ${subValue.toFixed(1)}`;
+        headline.textContent = data.headline;
+        headline.className = "text-xs font-black text-slate-800 uppercase font-mono tracking-wide";
+        desc.textContent = data.desc;
+        desc.className = "text-[11px] text-slate-500 italic mt-1 leading-relaxed max-w-lg mx-auto";
+        badge.className = `inline-block text-[10px] font-black font-mono tracking-wider px-2 py-0.5 rounded-md ${data.classes} mb-1.5`;
+    }
+
+    const currentTier = parseInt(document.getElementById('stored-main-rating').value, 10);
+    highlightSubChip(subValue, TIER_ROUTING_MAP[currentTier]);
+}
+
+function highlightSubChip(activeVal, allValues) {
+    if (!allValues) return;
+    allValues.forEach(val => {
+        const chip = document.getElementById(`sub-chip-${val.toFixed(1)}`);
+        if (!chip) return;
+        
+        if (val === activeVal) {
+            chip.className = "px-5 py-2 font-mono text-xs font-black rounded-xl border-2 border-indigo-600 bg-indigo-600 text-white shadow-2xs focus:outline-none";
+        } else {
+            chip.className = "px-5 py-2 font-mono text-xs font-black rounded-xl border border-gray-200 bg-white text-gray-600 hover:border-gray-400 focus:outline-none";
+        }
+    });
+}		
     </script>
 </body>
 </html>

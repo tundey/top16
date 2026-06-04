@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top16 - Soccer Tryouts</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+	<link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cmask id='ballMask'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23ffffff'/%3E%3C/mask%3E%3Cg mask='url(%23ballMask)'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23f3f4f6'/%3E%3Cpath d='M12-1c3.5 4 3.5 10 0 14-3.5 4-3.5 10 0 14C6.5 24 3 18.5 3 12S6.5 0 12-1z' fill='%23059669' opacity='0.9'/%3E%3Cpath d='M12-1c-3.5 4-3.5 10 0 14 3.5 4 3.5 10 0 14 5.5-3 9-8.5 9-15s-3.5-10-8-14z' fill='%234f46e5' opacity='0.85'/%3E%3Cpath d='M12 13c2.5 3 5.5 5 5.5 8.5S14.5 26 12 26s-5.5-1.5-5.5-5 3.5-5.5 5.5-8.5z' fill='%239333ea' opacity='0.8'/%3E%3Cpath d='M12-1c1.5 5 4.5 8.5 9 9M12-1c-1.5 5-4.5 8.5-9 9M12 25c1.5-5 4.5-8.5 9-9M12 25c-1.5-5-4.5-8.5-9-9M3 12h18M12-1v26' stroke='%23ffffff' stroke-width='0.8' stroke-linecap='round' opacity='0.55'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='11.6' stroke='%231e293b' stroke-width='0.8' fill='none'/%3E%3C/svg%3E">	
+</head>
+
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen text-lg">
+
+    <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm border border-gray-200">
+            <h1 class="text-3xl font-black text-emerald-600 mb-1 text-center tracking-tight">⚽ Top16</h1>
+            <p class="text-gray-500 text-xs mb-6 text-center">Please identify yourself and enter the tryout access code.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scout Name</label>
+                    <input type="text" id="auth-evaluator-name" placeholder="Coach John / Scout Sarah" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-base font-medium text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Secret Access Code</label>
+                    <input type="password" id="secret-code-input" placeholder="Secret Code" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                </div>
+
+                <button onclick="handleLoginSubmit()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl transition duration-200 cursor-pointer mt-2 shadow-sm shadow-emerald-200">
+                    Enter Top16
+                </button>
+            </div>
+            
+            <p id="auth-error" class="text-red-600 text-xs text-center mt-4 hidden font-semibold">⚠️ Both Name and Access Code are required.</p>
+        </div>
+    </div>
+
+    
+	<div id="app-screen" class="hidden max-w-md md:max-w-2xl mx-auto p-4 pb-24">
+        
+        <header class="flex justify-between items-end mb-4 border-b border-gray-200 pb-3 gap-2">
+            <div>
+                <h1 class="text-2xl font-black text-gray-900 tracking-tight">🏆 Top16 Scouting</h1>
+                <p class="text-xs text-gray-500">2026 U13/14 Boys Tryouts</p>
+            </div>
+            <div class="text-right bg-white border border-gray-200 rounded-lg p-2 shadow-xs flex items-center gap-3 shrink-0">
+                <div>
+                    <span class="text-[9px] text-gray-400 block font-semibold uppercase tracking-wider">Active Scout</span>
+                    <span id="active-evaluator-display" class="text-xs font-bold text-emerald-600 block max-w-[100px] truncate">---</span>
+                </div>
+                <button onclick="handleLogout()" title="Log out session" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-md text-rose-600 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 text-xs text-blue-800">
+            <span class="font-bold uppercase tracking-wider text-blue-700 block mb-1">👀 What to look for:</span>
+            <ul class="list-disc list-inside space-y-0.5 text-blue-900">
+                <li><strong class="text-gray-900">1 (Best):</strong> Dominates 1v1s, high work rate, vocal leader, excellent first touch.</li>
+                <li><strong class="text-gray-900">2 (Average):</strong> Solid positioning, completes passes, safe plays, decent fitness.</li>
+                <li><strong class="text-gray-900">3 (Below):</strong> Struggles under pressure, chasing the game, heavy touches.</li>
+            </ul>
+        </div>
+
+		<!-- PROTECTED ROSTER RANGE NOTICE BANNER -->
+		<div class="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 shadow-xs">
+			<div class="text-amber-600 shrink-0 mt-0.5">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+					<path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
+				</svg>
+			</div>
+			<div>
+				<h4 class="text-xs font-black text-amber-800 uppercase tracking-wider">Protected Pool Exception</h4>
+				<p class="text-xs text-amber-700 leading-normal mt-0.5">
+					Jersey numbers <strong class="font-extrabold text-amber-900">401 through 480</strong> belong to protected players. These athletes are locked and unavailable for draft selection.
+				</p>
+			</div>
+		</div>
+
+        <main class="bg-white rounded-2xl p-4 shadow-md border border-gray-200 mb-6">
+            <form id="evaluation-form" onsubmit="submitEvaluation(event)">
+                
+
+				
+                <div class="mb-4">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Player Jersey #</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="player-number" required placeholder="e.g. 123" min="1" max="999999" class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg font-bold text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                        
+                        <select id="existing-players-dropdown" onchange="selectExistingPlayer(this.value)" class="bg-gray-100 border border-gray-300 rounded-xl px-2 text-xs font-semibold text-gray-700 max-w-[120px] focus:outline-none">
+                            <option value="">Active (#)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Rating</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button type="button" onclick="setRating(1)" id="btn-rating-1" class="rating-btn bg-gray-50 border-2 border-gray-200 hover:border-emerald-500 rounded-xl py-3 text-center transition cursor-pointer">
+                            <span class="block text-2xl font-black text-emerald-600">1</span>
+                            <span class="text-[10px] uppercase font-bold text-gray-500">Best</span>
+                        </button>
+                        <button type="button" onclick="setRating(2)" id="btn-rating-2" class="rating-btn bg-gray-50 border-2 border-gray-200 hover:border-amber-500 rounded-xl py-3 text-center transition cursor-pointer">
+                            <span class="block text-2xl font-black text-amber-600">2</span>
+                            <span class="text-[10px] uppercase font-bold text-gray-500">Avg</span>
+                        </button>
+                        <button type="button" onclick="setRating(3)" id="btn-rating-3" class="rating-btn bg-gray-50 border-2 border-gray-200 hover:border-rose-500 rounded-xl py-3 text-center transition cursor-pointer">
+                            <span class="block text-2xl font-black text-rose-600">3</span>
+                            <span class="text-[10px] uppercase font-bold text-gray-500">Below</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="selected-rating" required>
+                </div>
+				
+				<div class="mb-5">
+					<label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Scouting Notes</label>
+					
+					<div class="flex flex-wrap gap-1.5 mb-2.5" id="quick-tags-container">
+						<button type="button" onclick="appendQuickTag('Great first touch')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ First Touch
+						</button>
+						<button type="button" onclick="appendQuickTag('High work rate')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Work Rate
+						</button>
+						<button type="button" onclick="appendQuickTag('Vocal leader')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Vocal
+						</button>
+						<button type="button" onclick="appendQuickTag('Dominates 1v1s')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ 1v1 Dom
+						</button>
+						<button type="button" onclick="appendQuickTag('Physical')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Physical
+						</button>						
+						<button type="button" onclick="appendQuickTag('Speed')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Speed
+						</button>
+						<button type="button" onclick="appendQuickTag('Great ball control')" class="text-[11px] font-bold px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition active:scale-95 cursor-pointer">
+							+ Ball control
+						</button>
+					
+
+						<button type="button" onclick="appendQuickTag('Heavy touch under pressure')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Heavy Touch
+						</button>
+						<button type="button" onclick="appendQuickTag('Weak left foot')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Weak Left
+						</button>
+						<button type="button" onclick="appendQuickTag('Chasing the game')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Chasing
+						</button>
+						<button type="button" onclick="appendQuickTag('Doesn\'t understand the game')" class="text-[11px] font-bold px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition active:scale-95 cursor-pointer">
+							- Not soccer smart
+						</button>						
+						
+					</div>
+
+					<textarea id="player-notes" rows="2" placeholder="Great speed, physical..." class="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-sm text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
+				</div>				
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl shadow-md transition duration-150 transform active:scale-98 cursor-pointer">
+                    Save Scouting Report
+                </button>
+            </form>
+        </main>
+
+		<section>
+			<h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center justify-between">
+				<span>My Scouting Reports</span>
+				<div id="history-header-actions" class="flex items-center gap-2">
+					<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 reports</span>
+				</div>
+			</h2>
+			<div id="history-list" class="space-y-2 max-h-64 pr-1">
+				<p class="text-sm text-gray-400 italic text-center py-4">No scouting reports submitted yet.</p>
+			</div>
+		</section>
+		
+		
+    </div>
+
+	<script type="module">
+		import { db } from "./firebase-config.js";
+		import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";		
+
+		// Your live form submission code continues below cleanly...
+        const TARGET_HASH = "03391382a15ee47c608b6bb39685ab682a8eecc3c451f33c96edbe4f984340a4";
+
+        let detachSnapshotListener = null;
+        let currentRating = null;
+        let allPlayersList = new Set();
+        let myEvaluations = [];
+
+        async function generateSHA256(message) {
+            const msgBuffer = new TextEncoder().encode(message);                    
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+		// --- Contextual Note Tag Appender Engine ---
+		window.appendQuickTag = function(tagValue) {
+			const notesField = document.getElementById('player-notes');
+			let currentText = notesField.value.trim();
+
+			if (currentText.length === 0) {
+				// If the area is blank, capitalize the tag and assign it directly
+				notesField.value = tagValue.charAt(0).toUpperCase() + tagValue.slice(1);
+			} else {
+				// If text already exists, evaluate if it ends with punctuation
+				const endsWithPunctuation = /[.,\/#!$%\^&\*;:{}=\-_`~()]/ .test(currentText.slice(-1));
+				
+				if (endsWithPunctuation) {
+					notesField.value = `${currentText} ${tagValue.charAt(0).toUpperCase() + tagValue.slice(1)}`;
+				} else {
+					// Append with a smooth comma separator layout structural convention
+					notesField.value = `${currentText}, ${tagValue.toLowerCase()}`;
+				}
+			}
+			
+			// Automatically reset focus back onto the field to preserve continuity
+			notesField.focus();
+		}
+		
+		window.exportScoutDataToCSV = function() {
+			if (!myEvaluations || myEvaluations.length === 0) {
+				alert("No evaluations found to export for this session.");
+				return;
+			}
+
+			const scoutName = sessionStorage.getItem('evaluatorName') || 'Scout';
+			
+			// 1. Build the CSV Header Configuration
+			let csvContent = "data:text/csv;charset=utf-8,";
+			csvContent += "Player Jersey Number,Scout Rating,Timestamp,Scouting Notes\r\n";
+
+			// 2. Loop and sanitize evaluation rows
+			myEvaluations.forEach(item => {
+				const playerNum = item.playerNumber;
+				const rating = item.rating;
+				
+				// Format time smoothly for spreadsheet systems
+				const timeStr = item.timestamp ? item.timestamp.toDate().toLocaleString() : new Date().toLocaleString();
+				
+				// Escape quotes inside custom text notes to prevent splitting columns layout errors
+				const cleanNotes = item.notes ? `"${item.notes.replace(/"/g, '""')}"` : '""';
+
+				csvContent += `${playerNum},${rating},${timeStr},${cleanNotes}\r\n`;
+			});
+
+			// 3. Compile Data Stream URI
+			const encodedUri = encodeURI(csvContent);
+			
+			// 4. Anchor a phantom link layer to trigger native mobile file download pipelines
+			const link = document.createElement("a");
+			link.setAttribute("href", encodedUri);
+			
+			// Formats filename dynamically: e.g., "Top16_Coach_John_Evaluations.csv"
+			const formattedFilename = `Top16_${scoutName.replace(/\s+/g, '_')}_ScoutingReports.csv`;
+			link.setAttribute("download", formattedFilename);
+			
+			document.body.appendChild(link);
+			link.click(); // Fires download sequence instantly
+			document.body.removeChild(link); // Housekeeping cleanup
+		}		
+
+        window.handleLoginSubmit = async function() {
+            const nameInput = document.getElementById('auth-evaluator-name').value.trim();
+            const codeInput = document.getElementById('secret-code-input').value.trim();
+            
+            if (!nameInput || !codeInput) {
+                showAuthError("⚠️ Both Name and Access Code are required.");
+                return;
+            }
+
+            const inputHash = await generateSHA256(codeInput.toLowerCase());
+
+            if (inputHash !== TARGET_HASH) {
+                showAuthError("⚠️ Invalid Secret Access Code. Access Denied.");
+                document.getElementById('secret-code-input').value = '';
+                document.getElementById('secret-code-input').focus();
+                return;
+            }
+
+            sessionStorage.setItem('evaluatorName', nameInput);
+            sessionStorage.setItem('tryoutHashedPasscode', inputHash);
+            
+            launchApp(nameInput);
+        }
+
+        window.handleLogout = function() {
+            if (confirm("Are you sure you want to sign out? This clears your temporary session cache on this device.")) {
+                if (typeof detachSnapshotListener === 'function') {
+                    detachSnapshotListener();
+                }
+
+                sessionStorage.clear();
+
+                currentRating = null;
+                document.getElementById('evaluation-form').reset();
+                document.getElementById('selected-rating').value = '';
+                document.querySelectorAll('.rating-btn').forEach(btn => {
+                    btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
+                    btn.classList.add('border-gray-200', 'bg-gray-50');
+                });
+
+                document.getElementById('app-screen').classList.add('hidden');
+                document.getElementById('auth-screen').classList.remove('hidden');
+                
+                document.getElementById('secret-code-input').value = '';
+                document.getElementById('auth-evaluator-name').value = '';
+            }
+        }
+
+        function showAuthError(message) {
+            const errorMsg = document.getElementById('auth-error');
+            errorMsg.textContent = message;
+            errorMsg.classList.remove('hidden');
+            setTimeout(() => errorMsg.classList.add('hidden'), 4000);
+        }
+
+        function launchApp(evaluatorName) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('active-evaluator-display').textContent = evaluatorName;
+            initDataListeners(evaluatorName);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const cachedName = sessionStorage.getItem('evaluatorName');
+            const cachedHash = sessionStorage.getItem('tryoutHashedPasscode');
+            if (cachedName && cachedHash && cachedHash === TARGET_HASH) {
+                launchApp(cachedName);
+            } else {
+                sessionStorage.clear();
+            }
+        });
+
+        window.setRating = function(rating) {
+            currentRating = rating;
+            document.getElementById('selected-rating').value = rating;
+            
+            document.querySelectorAll('.rating-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
+                btn.classList.add('border-gray-200', 'bg-gray-50');
+            });
+
+            const activeBtn = document.getElementById(`btn-rating-${rating}`);
+            activeBtn.classList.remove('border-gray-200', 'bg-gray-50');
+            activeBtn.classList.add('bg-gray-100');
+            if (rating === 1) activeBtn.classList.add('border-emerald-500');
+            if (rating === 2) activeBtn.classList.add('border-amber-500');
+            if (rating === 3) activeBtn.classList.add('border-rose-500');
+        }
+
+        window.loadPlayerToForm = function(playerNum, rating, notes) {
+            document.getElementById('player-number').value = playerNum;
+            setRating(rating);
+            document.getElementById('player-notes').value = notes || "";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.selectExistingPlayer = function(playerNum) {
+            if (playerNum) {
+                document.getElementById('player-number').value = playerNum;
+                document.getElementById('existing-players-dropdown').value = "";
+            }
+        }
+
+        function initDataListeners(evaluatorName) {
+            if (typeof detachSnapshotListener === 'function') {
+                detachSnapshotListener();
+            }
+
+            const evaluationsCollection = collection(db, 'evaluations');
+            const q = query(evaluationsCollection, orderBy('timestamp', 'desc'));
+            const normalizedEvaluator = evaluatorName.toLowerCase();
+            
+            detachSnapshotListener = onSnapshot(q, (snapshot) => {
+                allPlayersList.clear();
+                myEvaluations = [];
+
+                snapshot.forEach((doc) => {
+                    const evalItem = doc.data();
+                    if(evalItem.playerNumber) {
+                        allPlayersList.add(evalItem.playerNumber);
+                    }
+                    if (evalItem.evaluator && evalItem.evaluator.toLowerCase() === normalizedEvaluator) {
+                        myEvaluations.push(evalItem);
+                    }
+                });
+                
+                updateDropdownUI();
+                updateHistoryUI();
+            });
+        }
+
+        function updateDropdownUI() {
+            const dropdown = document.getElementById('existing-players-dropdown');
+            dropdown.innerHTML = '<option value="">Active (#)</option>';
+            
+            const sortedPlayers = Array.from(allPlayersList).sort((a, b) => a - b);
+            sortedPlayers.forEach(num => {
+                const opt = document.createElement('option');
+                opt.value = num;
+                opt.textContent = `#${num}`;
+                dropdown.appendChild(opt);
+            });
+        }
+
+		function updateHistoryUI() {
+			const container = document.getElementById('history-list');
+			const actionsContainer = document.getElementById('history-header-actions');
+			
+			// 1. If history is completely empty, clear any buttons and show fallback text
+			if (myEvaluations.length === 0) {
+				actionsContainer.innerHTML = `<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">0 reports</span>`;
+				container.innerHTML = `<p class="text-sm text-gray-400 italic text-center py-4">No scouting reports submitted yet.</p>`;
+				return;
+			}
+
+			// 2. If data exists, update the count AND append the active Export Button
+			const submissionText = `${myEvaluations.length} report${myEvaluations.length === 1 ? '' : 's'}`;
+			actionsContainer.innerHTML = `
+				<span id="history-count" class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-normal">${submissionText}</span>
+				<button onclick="exportScoutDataToCSV()" title="Export scouting reports to CSV file" class="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md text-xs font-bold text-emerald-700 transition cursor-pointer flex items-center gap-1 animate-fadeIn">
+					💾 Export CSV
+				</button>
+			`;
+
+			// 3. Clear container and render evaluation logs
+			container.innerHTML = '';
+			myEvaluations.forEach(item => {
+				const card = document.createElement('div');
+				card.className = "bg-white border border-gray-200 rounded-xl p-3 flex justify-between items-center cursor-pointer hover:border-gray-400 shadow-xs transition active:scale-99";
+				card.setAttribute('onclick', `loadPlayerToForm('${item.playerNumber}', ${item.rating}, \`${item.notes.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)`);
+				
+				let ratingColor = "text-emerald-600";
+				if(item.rating === 2) ratingColor = "text-amber-600";
+				if(item.rating === 3) ratingColor = "text-rose-600";
+
+				let displayTime = "Syncing...";
+				if (item.timestamp) {
+					const dateObj = item.timestamp.toDate();
+					displayTime = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+				} else {
+					displayTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+				}
+
+				card.innerHTML = `
+					<div class="flex-1 min-w-0 pr-2">
+						<div class="flex items-baseline gap-2">
+							<span class="text-base font-black text-gray-900">#${item.playerNumber}</span>
+							<span class="text-xs font-bold ${ratingColor}">Score: ${item.rating}</span>
+						</div>
+						<p class="text-xs text-gray-500 truncate mt-0.5">${item.notes ? item.notes : '<span class="italic text-gray-300">No notes</span>'}</p>
+					</div>
+					<div class="text-right shrink-0">
+						<div class="text-[10px] text-gray-400 font-mono font-semibold uppercase tracking-wider">${displayTime}</div>
+						<div class="text-[9px] text-emerald-600 font-bold tracking-tight mt-0.5">Tap to Edit</div>
+					</div>
+				`;
+				container.appendChild(card);
+			});
+		}
+
+        window.submitEvaluation = function(event) {
+            event.preventDefault();
+			
+			// --- PROTECTED PLAYER POOL DATA GUARD ---
+			const parsedPlayerNum = parseInt(document.getElementById('player-number').value.trim(), 10);
+
+			if (parsedPlayerNum >= 401 && parsedPlayerNum <= 480) {
+				alert(`🚫 Submission Denied: Player #${parsedPlayerNum} is part of the protected roster pool and should not be evaluated.`);
+				
+				// Reset fields to clean up execution context tracking loop
+				playerNumberField.value = '';
+				playerNumberField.focus();
+				return; // Hard stop code execution instantly
+			}			
+            
+            const evaluator = sessionStorage.getItem('evaluatorName');
+            const hashedCode = sessionStorage.getItem('tryoutHashedPasscode');
+            const playerNumber = document.getElementById('player-number').value.trim();
+            const notes = document.getElementById('player-notes').value.trim();
+            
+            if (!evaluator || !hashedCode) {
+                alert("Session context missing. Please log in again.");
+                sessionStorage.clear();
+                window.location.reload();
+                return;
+            }
+
+            if (!currentRating) {
+                alert("Please click a score (1, 2, or 3) before submitting.");
+                return;
+            }
+
+            addDoc(collection(db, 'evaluations'), {
+                evaluator: evaluator,
+                playerNumber: parseInt(playerNumber),
+                rating: parseInt(currentRating),
+                notes: notes,
+                passcodeHash: hashedCode, 
+                timestamp: serverTimestamp()
+            }).then(() => {
+                document.getElementById('player-number').value = '';
+                document.getElementById('player-notes').value = '';
+                currentRating = null;
+                document.getElementById('selected-rating').value = '';
+                document.querySelectorAll('.rating-btn').forEach(btn => {
+                    btn.classList.remove('border-emerald-500', 'border-amber-500', 'border-rose-500', 'bg-gray-100');
+                    btn.classList.add('border-gray-200', 'bg-gray-50');
+                });
+                
+                document.getElementById('player-number').focus();
+            }).catch((err) => {
+                alert("Permission Denied: Server rule validation failed.");
+                sessionStorage.clear();
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
