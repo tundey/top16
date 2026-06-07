@@ -386,7 +386,6 @@
             if (rawLogs.length === 0) return;
 
             let totalRatingSum = 0;
-			let totalSubRatingSum = 0;
             let score1Count = 0;
             let score2Count = 0;
             let score3Count = 0;
@@ -397,9 +396,7 @@
 
             rawLogs.forEach(item => {
                 const rating = parseInt(item.rating, 10);
-				const subRating = parseFloat(item.subRating) || 0
                 totalRatingSum += rating;
-				totalSubRatingSum += subRating;
 
                 if (rating === 1) score1Count++;
                 if (rating === 2) score2Count++;
@@ -410,14 +407,9 @@
 
                 if (item.playerNumber) {
                     if (!playerMap[item.playerNumber]) {
-                        playerMap[item.playerNumber] = { totalScore: 0, totalSubScore: 0, count: 0, subScoreCount: 0, notes: [], history: [] };
+                        playerMap[item.playerNumber] = { totalScore: 0, count: 0, notes: [], history: [] };
                     }
                     playerMap[item.playerNumber].totalScore += rating;
-					playerMap[item.playerNumber].totalSubScore += subRating;
-					if (subRating > 0)
-					{
-						playerMap[item.playerNumber].subScoreCount++;
-					}
                     playerMap[item.playerNumber].count++;
                     if(item.notes) playerMap[item.playerNumber].notes.push(item.notes);
 					
@@ -830,12 +822,7 @@ function renderDraftPriorityRankings(playerMap) {
         const rawHistory = playerMap[id].history || [];
         const notesArray = playerMap[id].notes || [];
         const totalLogsCount = playerMap[id].count || notesArray.length || 1;
-		debugger;
-		const totalSubScoreCount = playerMap[id].subScoreCount || notesArray.length || 1;
         const avgRatingValue = playerMap[id].totalScore / totalLogsCount;
-		const avgSubRatingValue = playerMap[id].totalSubScore / totalSubScoreCount;
-		
-		debugger;
 
         // Extract and combine structural text arrays for sentiment weighting
         let combinedText = notesArray.join(" ").toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"\n]/g, " ");
@@ -866,10 +853,7 @@ function renderDraftPriorityRankings(playerMap) {
          * Objective: Minimize index total. High ratings penalize, positive sentiment rewards,
          * and logarithmic log scaling adds confidence curves to sample sizes.
          */
-        let compositeValueMetric = (avgRatingValue * 1.5) - (finalSentiment * 0.25) - Math.log(totalLogsCount + 1);
-		if (playerMap[id].totalSubScore > 0) {
-			compositeValueMetric = (avgRatingValue * 1.0)  + (avgSubRatingValue * 0.5) - (finalSentiment * 0.25) - Math.log(totalLogsCount + 1);
-		}
+        const compositeValueMetric = (avgRatingValue * 1.5) - (finalSentiment * 0.25) - Math.log(totalLogsCount + 1);
 
         rankedCollection.push({
             id: id,

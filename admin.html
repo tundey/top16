@@ -248,6 +248,7 @@
                         evaluator: item.evaluator || "Anonymous",
                         rating: item.rating || 0,
 						subRating: item.subRating || "",
+						headlineText: item.headlineText || "",
                         notes: item.notes || ""
                     });
                 });
@@ -453,12 +454,13 @@
                 alert("There is no evaluation data available to export yet.");
                 return;
             }
-            const headers = ["Timestamp", "Player Jersey Number", "Evaluator Scout", "Rating Score", "Scouting Notes"];
+            const headers = ["Timestamp", "Player Jersey Number", "Evaluator Scout", "Rating Score", "SubRating", "Scouting Notes"];
             const rows = globalEvaluationsList.map(item => [
                 item.timestamp,
                 item.playerNumber,
                 item.evaluator,
                 item.rating,
+				item.subRating,
                 `"${item.notes.replace(/"/g, '""')}"`
             ]);
             const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
