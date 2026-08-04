@@ -6,14 +6,14 @@
   <title>Top16 Analytics - Player Rating Audit</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans anti-aliased p-6 md:p-10">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased p-6 md:p-10">
 
   <div class="max-w-7xl mx-auto space-y-8">
     
     <!-- Navigation Header -->
     <div class="flex items-center justify-between border-b border-slate-800 pb-5">
       <div>
-        <a href="#" class="text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors">
+        <a href="analytics.html" class="text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors">
           &larr; Back to Dashboard
         </a>
         <h1 class="text-3xl font-bold tracking-tight mt-1 text-white">Player Rating Audit</h1>
@@ -24,51 +24,45 @@
         <label for="playerSelect" class="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
           Select Player
         </label>
-        <select id="playerSelect" onchange="renderPlayerView(this.value)" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <!-- Populated dynamically via JS -->
+        <select id="playerSelect" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <option value="">Loading players...</option>
         </select>
       </div>
     </div>
 
-    <!-- Top Card: Summary Bar -->
+    <!-- Summary Bar -->
     <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         
         <div>
-          <h2 id="playerName" class="text-2xl font-bold text-white">Loading...</h2>
+          <h2 id="playerName" class="text-2xl font-bold text-white">Select a player</h2>
           <div id="playerMeta" class="flex items-center gap-3 mt-1 text-sm text-slate-400">
-            <!-- Populated via JS -->
+            <span>Choose a player from the dropdown to view evaluation logs.</span>
           </div>
         </div>
 
         <!-- Calculated Metrics Bar -->
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 border-t md:border-t-0 md:border-l border-slate-700/60 pt-4 md:pt-0 md:pl-6">
-          
           <div>
             <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Primary Rating</span>
             <span id="statAvgRating" class="text-xl font-extrabold text-white mt-1 block">-</span>
           </div>
-
           <div>
             <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Sub-Rating</span>
             <span id="statSubRating" class="text-xl font-extrabold text-white mt-1 block">-</span>
           </div>
-
           <div>
             <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Sentiment</span>
             <span id="statSentiment" class="text-xl font-extrabold text-white mt-1 block">-</span>
           </div>
-
           <div>
             <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Total Logs</span>
             <span id="statTotalLogs" class="text-xl font-extrabold text-white mt-1 block">-</span>
           </div>
-
           <div class="col-span-2 sm:col-span-1">
             <span class="block text-xs font-medium uppercase tracking-wider text-indigo-400">Value Index</span>
             <span id="statValueIndex" class="text-2xl font-black text-indigo-400 mt-1 block">-</span>
           </div>
-
         </div>
       </div>
     </div>
@@ -96,12 +90,12 @@
               </tr>
             </thead>
             <tbody id="auditTableBody" class="divide-y divide-slate-800/60">
-              <!-- Dynamically Populated -->
+              <tr>
+                <td colspan="6" class="py-8 text-center text-slate-500">No player selected.</td>
+              </tr>
             </tbody>
             <tfoot class="bg-slate-800/50 font-semibold text-white border-t border-slate-700">
-              <tr id="auditTableFooter">
-                <!-- Summary Averages Row -->
-              </tr>
+              <tr id="auditTableFooter"></tr>
             </tfoot>
           </table>
         </div>
@@ -110,61 +104,92 @@
 
   </div>
 
-  <!-- Script: Dynamic Data Handling & Value Index Computation -->
-  <script>
-    // Sample Dataset (Emulating the Top16 Analytics Firebase Structure)
-    const playersData = [
-      {
-        id: "p1",
-        name: "Marcus Vance",
-        position: "Midfielder",
-        squadNumber: "8",
-        logs: [
-          { date: "2026-08-01", scout: "Scout #1", primary: 2.0, sub: 1.5, sentiment: 2.1, notes: "Excellent spatial awareness and high press tempo." },
-          { date: "2026-07-28", scout: "Scout #3", primary: 2.5, sub: 2.0, sentiment: 1.4, notes: "Composed under pressure; solid distribution." },
-          { date: "2026-07-20", scout: "Scout #2", primary: 1.5, sub: null, sentiment: 3.0, notes: "Dominant 1v1 performance in middle third." }
-        ]
-      },
-      {
-        id: "p2",
-        name: "Ethan Wright",
-        position: "Forward",
-        squadNumber: "9",
-        logs: [
-          { date: "2026-08-03", scout: "Scout #4", primary: 3.0, sub: null, sentiment: -0.5, notes: "Struggled with finishing consistency inside the box." },
-          { date: "2026-07-29", scout: "Scout #1", primary: 2.5, sub: null, sentiment: 0.8, notes: "Good off-ball movement, created secondary options." }
-        ]
-      }
-    ];
+  <!-- Firebase & Page Integration Script -->
+  <script type="module">
+    import { db } from './firebase-config.js';
+    import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-    // Initialization
-    window.addEventListener("DOMContentLoaded", () => {
-      populatePlayerDropdown();
-      renderPlayerView(playersData[0].id);
+    // 1. Gatekeeper Check
+    const authCode = localStorage.getItem('top16_auth_code');
+    if (!authCode) {
+      window.location.href = 'index.html';
+    }
+
+    let loadedPlayers = [];
+
+    // 2. Real-time Firestore Listener
+    const selectEl = document.getElementById("playerSelect");
+    
+    onSnapshot(collection(db, "players"), (snapshot) => {
+      loadedPlayers = [];
+      snapshot.forEach(doc => {
+        loadedPlayers.push({ id: doc.id, ...doc.data() });
+      });
+
+      // Sort alphabetically by name
+      loadedPlayers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+      populateDropdown(loadedPlayers);
+
+      // Preserve selected player or default to first
+      const currentSelectedId = selectEl.value;
+      if (currentSelectedId && loadedPlayers.some(p => p.id === currentSelectedId)) {
+        renderPlayerView(currentSelectedId);
+      } else if (loadedPlayers.length > 0) {
+        selectEl.value = loadedPlayers[0].id;
+        renderPlayerView(loadedPlayers[0].id);
+      }
+    }, (error) => {
+      console.error("Firestore access error:", error);
     });
 
-    function populatePlayerDropdown() {
-      const select = document.getElementById("playerSelect");
-      select.innerHTML = playersData.map(p => `<option value="${p.id}">${p.name} (#${p.squadNumber})</option>`).join("");
+    selectEl.addEventListener("change", (e) => {
+      renderPlayerView(e.target.value);
+    });
+
+    function populateDropdown(players) {
+      if (players.length === 0) {
+        selectEl.innerHTML = `<option value="">No players found</option>`;
+        return;
+      }
+      selectEl.innerHTML = players.map(p => 
+        `<option value="${p.id}">${p.name || 'Unnamed'} ${p.squadNumber ? '(#' + p.squadNumber + ')' : ''}</option>`
+      ).join("");
     }
 
     function renderPlayerView(playerId) {
-      const player = playersData.find(p => p.id === playerId);
+      const player = loadedPlayers.find(p => p.id === playerId);
       if (!player) return;
 
-      // Calculate Log Metrics
-      const totalLogs = player.logs.length;
-      const avgPrimary = player.logs.reduce((acc, l) => acc + l.primary, 0) / totalLogs;
+      const logs = player.logs || [];
+      const totalLogs = logs.length;
+
+      if (totalLogs === 0) {
+        document.getElementById("playerName").textContent = player.name || "Unnamed Player";
+        document.getElementById("playerMeta").innerHTML = `<span>No evaluation logs recorded yet.</span>`;
+        document.getElementById("statAvgRating").textContent = "-";
+        document.getElementById("statSubRating").textContent = "-";
+        document.getElementById("statSentiment").textContent = "-";
+        document.getElementById("statTotalLogs").textContent = "0";
+        document.getElementById("statValueIndex").textContent = "-";
+        document.getElementById("auditTableBody").innerHTML = `
+          <tr><td colspan="6" class="py-8 text-center text-slate-500">No evaluations found for this player.</td></tr>
+        `;
+        document.getElementById("auditTableFooter").innerHTML = "";
+        return;
+      }
+
+      // Calculations
+      const avgPrimary = logs.reduce((acc, l) => acc + (Number(l.primary) || 0), 0) / totalLogs;
       
-      const subLogs = player.logs.filter(l => l.sub !== null && l.sub !== undefined);
+      const subLogs = logs.filter(l => l.sub !== null && l.sub !== undefined && l.sub !== "");
       const avgSub = subLogs.length > 0 
-        ? subLogs.reduce((acc, l) => acc + l.sub, 0) / subLogs.length 
+        ? subLogs.reduce((acc, l) => acc + Number(l.sub), 0) / subLogs.length 
         : null;
 
-      const avgSentiment = player.logs.reduce((acc, l) => acc + l.sentiment, 0) / totalLogs;
+      const avgSentiment = logs.reduce((acc, l) => acc + (Number(l.sentiment) || 0), 0) / totalLogs;
 
-      // Dynamic Weighting Formula:
-      // Primary x1.0 + Sub x0.5 (if present) OR Primary x1.5 (if missing)
+      // Dynamic Weighting Calculation
       let ratingComponent = 0;
       if (avgSub !== null) {
         ratingComponent = (avgPrimary * 1.0) + (avgSub * 0.5);
@@ -174,11 +199,11 @@
 
       const valueIndex = ratingComponent - (avgSentiment * 0.25) - Math.log(totalLogs + 1);
 
-      // Render Summary Card
-      document.getElementById("playerName").textContent = player.name;
+      // Render Header Details
+      document.getElementById("playerName").textContent = player.name || "Unnamed Player";
       document.getElementById("playerMeta").innerHTML = `
-        <span class="bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full text-xs font-medium border border-slate-700">${player.position}</span>
-        <span>Squad #${player.squadNumber}</span>
+        <span class="bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full text-xs font-medium border border-slate-700">${player.position || 'N/A'}</span>
+        <span>Squad #${player.squadNumber || 'N/A'}</span>
       `;
 
       document.getElementById("statAvgRating").textContent = avgPrimary.toFixed(2);
@@ -194,32 +219,32 @@
       document.getElementById("statValueIndex").textContent = valueIndex.toFixed(3);
       document.getElementById("logCountBadge").textContent = `${totalLogs} Logs`;
 
-      // Render Audit Table Rows
+      // Render Table Rows
       const tbody = document.getElementById("auditTableBody");
-      tbody.innerHTML = player.logs.map(log => {
-        const subBadge = log.sub !== null 
-          ? `<span class="bg-slate-800 text-slate-200 border border-slate-700 font-mono px-2 py-0.5 rounded text-xs">${log.sub.toFixed(1)}</span>`
+      tbody.innerHTML = logs.map(log => {
+        const subBadge = (log.sub !== null && log.sub !== undefined && log.sub !== "")
+          ? `<span class="bg-slate-800 text-slate-200 border border-slate-700 font-mono px-2 py-0.5 rounded text-xs">${Number(log.sub).toFixed(1)}</span>`
           : `<span class="text-slate-600">—</span>`;
 
-        const sentBadge = log.sentiment >= 0
-          ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono px-2 py-0.5 rounded text-xs">+${log.sentiment.toFixed(1)}</span>`
-          : `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono px-2 py-0.5 rounded text-xs">${log.sentiment.toFixed(1)}</span>`;
+        const sentVal = Number(log.sentiment) || 0;
+        const sentBadge = sentVal >= 0
+          ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono px-2 py-0.5 rounded text-xs">+${sentVal.toFixed(1)}</span>`
+          : `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono px-2 py-0.5 rounded text-xs">${sentVal.toFixed(1)}</span>`;
 
         return `
           <tr class="hover:bg-slate-800/40 transition-colors">
-            <td class="py-3 px-4 font-mono text-xs text-slate-400">${log.date}</td>
-            <td class="py-3 px-4 font-medium text-white">${log.scout}</td>
-            <td class="py-3 px-4 text-center font-mono font-semibold text-white">${log.primary.toFixed(1)}</td>
+            <td class="py-3 px-4 font-mono text-xs text-slate-400">${log.date || '—'}</td>
+            <td class="py-3 px-4 font-medium text-white">${log.scout || 'Scout'}</td>
+            <td class="py-3 px-4 text-center font-mono font-semibold text-white">${Number(log.primary || 0).toFixed(1)}</td>
             <td class="py-3 px-4 text-center">${subBadge}</td>
             <td class="py-3 px-4 text-center">${sentBadge}</td>
-            <td class="py-3 px-4 text-slate-300">${log.notes}</td>
+            <td class="py-3 px-4 text-slate-300">${log.notes || ''}</td>
           </tr>
         `;
       }).join("");
 
-      // Render Audit Table Footer (Averages)
-      const tfoot = document.getElementById("auditTableFooter");
-      tfoot.innerHTML = `
+      // Render Table Footer
+      document.getElementById("auditTableFooter").innerHTML = `
         <td colspan="2" class="py-3 px-4 text-slate-400 uppercase text-xs tracking-wider">Averages / Totals</td>
         <td class="py-3 px-4 text-center font-mono">${avgPrimary.toFixed(2)}</td>
         <td class="py-3 px-4 text-center font-mono">${avgSub !== null ? avgSub.toFixed(2) : "—"}</td>
