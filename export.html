@@ -1,259 +1,536 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Top16 Analytics - Player Rating Audit</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top16 - Export Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cmask id='ballMask'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23ffffff'/%3E%3C/mask%3E%3Cg mask='url(%23ballMask)'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23f3f4f6'/%3E%3Cpath d='M12-1c3.5 4 3.5 10 0 14-3.5 4-3.5 10 0 14C6.5 24 3 18.5 3 12S6.5 0 12-1z' fill='%23059669' opacity='0.9'/%3E%3Cpath d='M12-1c-3.5 4-3.5 10 0 14 3.5 4 3.5 10 0 14 5.5-3 9-8.5 9-15s-3.5-10-8-14z' fill='%234f46e5' opacity='0.85'/%3E%3Cpath d='M12 13c2.5 3 5.5 5 5.5 8.5S14.5 26 12 26s-5.5-1.5-5.5-5 3.5-5.5 5.5-8.5z' fill='%239333ea' opacity='0.8'/%3E%3Cpath d='M12-1c1.5 5 4.5 8.5 9 9M12-1c-1.5 5-4.5 8.5-9 9M12 25c1.5-5 4.5-8.5 9-9M12 25c-1.5-5-4.5-8.5-9-9M3 12h18M12-1v26' stroke='%23ffffff' stroke-width='0.8' stroke-linecap='round' opacity='0.55'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='11.6' stroke='%231e293b' stroke-width='0.8' fill='none'/%3E%3C/svg%3E">	
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased p-6 md:p-10">
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen relative">
 
-  <div class="max-w-7xl mx-auto space-y-8">
-    
-    <!-- Navigation Header -->
-    <div class="flex items-center justify-between border-b border-slate-800 pb-5">
-      <div>
-        <a href="analytics.html" class="text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors">
-          &larr; Back to Dashboard
-        </a>
-        <h1 class="text-3xl font-bold tracking-tight mt-1 text-white">Player Rating Audit</h1>
-      </div>
-      
-      <!-- Player Selector Dropdown -->
-      <div class="w-64">
-        <label for="playerSelect" class="block text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
-          Select Player
-        </label>
-        <select id="playerSelect" class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <option value="">Loading players...</option>
-        </select>
-      </div>
+    <!-- GATEKEEPER SIGN-IN MODAL -->
+    <div id="gatekeeper-modal" class="fixed inset-0 z-50 bg-gray-900/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl border border-gray-200 max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-black text-gray-900 tracking-tight mb-1">Admin Authorization Required</h2>
+            <p class="text-xs text-gray-400 mb-5">Please provide your name and the gatekeeper passcode to access data exports.</p>
+            
+            <form id="gatekeeper-form" onsubmit="verifyAdminPasscode(event)" class="text-left space-y-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Scout / Admin Name</label>
+                    <input type="text" id="gatekeeper-scout-name" placeholder="Coach John / Scout Sarah" required autocomplete="name"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-900 font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] uppercase font-bold tracking-wider text-gray-400 mb-1">Passcode</label>
+                    <input type="password" id="gatekeeper-passcode-input" placeholder="Secret Code" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center text-xl tracking-widest text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">						
+                </div>
+                
+                <p id="gatekeeper-error-msg" class="text-xs text-rose-600 font-bold hidden text-center pt-1">⚠️ Access Denied. Incorrect Passcode.</p>
+                
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-xl transition duration-200 cursor-pointer mt-2 shadow-sm shadow-emerald-200">
+                    Authorize Export Center
+                </button>			
+            </form>
+        </div>
     </div>
 
-    <!-- Summary Bar -->
-    <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        
-        <div>
-          <h2 id="playerName" class="text-2xl font-bold text-white">Select a player</h2>
-          <div id="playerMeta" class="flex items-center gap-3 mt-1 text-sm text-slate-400">
-            <span>Choose a player from the dropdown to view evaluation logs.</span>
-          </div>
+    <!-- MAIN APP WRAPPER -->
+    <div id="admin-content-blur-wrapper" class="max-w-5xl mx-auto p-4 pb-24 filter blur-sm pointer-events-none transition-all duration-500">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-gray-200 pb-4 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 tracking-tight">📥 Data Export Center</h1>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                <a href="index.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+                    Scouting
+                </a>
+                <a href="analytics.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+                    Analytics
+                </a>
+                <a href="admin.html" class="w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-bold px-4 py-2.5 rounded-xl transition duration-150 flex items-center justify-center gap-2 cursor-pointer text-sm shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+                    Admin Dashboard
+                </a>
+                <div>
+                    <span class="text-[9px] text-gray-400 block font-semibold uppercase tracking-wider">Active Scout</span>
+                    <span id="active-admin-display" class="font-bold text-gray-700">Connecting...</span>
+                </div>
+                <button onclick="handleAdminLogout()" title="Log out session" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-md text-rose-600 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" /></svg>
+                </button>				
+            </div>
+        </header>
+
+        <!-- ANALYTICS CARDS -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <span class="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Total Exportable Records</span>
+                <span id="stat-total-evals" class="text-2xl font-black text-gray-900">0</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <span class="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Unique Players Evaluated</span>
+                <span id="stat-unique-players" class="text-2xl font-black text-emerald-600">0</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <span class="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Active Evaluators</span>
+                <span id="stat-total-scouts" class="text-2xl font-black text-blue-600">0</span>
+            </div>
         </div>
 
-        <!-- Calculated Metrics Bar -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 border-t md:border-t-0 md:border-l border-slate-700/60 pt-4 md:pt-0 md:pl-6">
-          <div>
-            <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Primary Rating</span>
-            <span id="statAvgRating" class="text-xl font-extrabold text-white mt-1 block">-</span>
-          </div>
-          <div>
-            <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Sub-Rating</span>
-            <span id="statSubRating" class="text-xl font-extrabold text-white mt-1 block">-</span>
-          </div>
-          <div>
-            <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Sentiment</span>
-            <span id="statSentiment" class="text-xl font-extrabold text-white mt-1 block">-</span>
-          </div>
-          <div>
-            <span class="block text-xs font-medium uppercase tracking-wider text-slate-400">Total Logs</span>
-            <span id="statTotalLogs" class="text-xl font-extrabold text-white mt-1 block">-</span>
-          </div>
-          <div class="col-span-2 sm:col-span-1">
-            <span class="block text-xs font-medium uppercase tracking-wider text-indigo-400">Value Index</span>
-            <span id="statValueIndex" class="text-2xl font-black text-indigo-400 mt-1 block">-</span>
-          </div>
+        <!-- PLAYER SELECTION & EXPORT CONTROLS -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-md mb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+                <div>
+                    <h2 class="text-lg font-black text-gray-900 tracking-tight">Select Players for Export</h2>
+                    <p class="text-xs text-gray-500">Pick specific player IDs to bundle into a grouped PDF report.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="selectAllPlayers(true)" class="text-xs font-extrabold text-emerald-600 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition cursor-pointer">Select All</button>
+                    <button onclick="selectAllPlayers(false)" class="text-xs font-extrabold text-gray-500 hover:text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 transition cursor-pointer">Deselect All</button>
+                </div>
+            </div>
+
+            <div id="player-checkbox-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200 max-h-48 overflow-y-auto mb-5">
+                <span class="text-xs text-gray-400 col-span-full italic">Loading player roster...</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="exportToPDF()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3 rounded-xl transition duration-150 shadow-sm shadow-indigo-200 flex items-center justify-center gap-2 cursor-pointer text-sm flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25H8.25m2.25 0H5.625A2.25 2.25 0 0 0 3.375 4.5v15a2.25 2.25 0 0 0 2.25 2.25h12.75a2.25 2.25 0 0 0 2.25-2.25v-1.5M12 9v6m0 0 3-3m-3 3-3-3" /></svg>
+                    Export Selected Players (PDF)
+                </button>
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-3 rounded-xl transition duration-150 shadow-sm shadow-emerald-200 flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                    Download CSV
+                </button>
+            </div>
         </div>
-      </div>
+
+        <div id="dashboard-view-container" class="space-y-4"></div>
     </div>
 
-    <!-- Ratings Audit Log Table -->
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-white">Evaluation Log History</h3>
-        <span id="logCountBadge" class="bg-slate-800 text-slate-400 text-xs font-medium px-2.5 py-1 rounded-full border border-slate-700">
-          0 Logs
-        </span>
-      </div>
+	<!-- OFF-SCREEN CONTAINER FOR HTML2PDF (Replaces <div class="hidden">) -->
+    <div class="absolute -left-[9999px] top-0 w-[800px] bg-white pointer-events-none" aria-hidden="true">
+        <div id="pdf-export-container" class="p-8 bg-white font-sans text-gray-800"></div>
+    </div>	
 
-      <div class="bg-slate-800/30 border border-slate-800 rounded-xl overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-300">
-            <thead class="bg-slate-800/80 text-xs uppercase text-slate-400 font-semibold tracking-wider border-b border-slate-800">
-              <tr>
-                <th scope="col" class="py-3.5 px-4">Date</th>
-                <th scope="col" class="py-3.5 px-4">Scout</th>
-                <th scope="col" class="py-3.5 px-4 text-center">Primary Rating</th>
-                <th scope="col" class="py-3.5 px-4 text-center">Sub-Rating</th>
-                <th scope="col" class="py-3.5 px-4 text-center">Sentiment</th>
-                <th scope="col" class="py-3.5 px-4">Scout Notes</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody" class="divide-y divide-slate-800/60">
-              <tr>
-                <td colspan="6" class="py-8 text-center text-slate-500">No player selected.</td>
-              </tr>
-            </tbody>
-            <tfoot class="bg-slate-800/50 font-semibold text-white border-t border-slate-700">
-              <tr id="auditTableFooter"></tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
+    <template id="spreadsheet-template">
+        <main class="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden">
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Export Preview Table</span>
+                <span id="preview-row-count" class="text-xs text-gray-400 font-medium">0 records ready</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-400 text-[10px] uppercase font-bold tracking-wider select-none">
+                            <th onclick="toggleSort('timestampRaw')" class="py-3 px-4 cursor-pointer hover:bg-gray-100 transition duration-150">Timestamp <span id="sort-icon-timestampRaw">▼</span></th>
+                            <th onclick="toggleSort('playerNumber')" class="py-3 px-4 cursor-pointer hover:bg-gray-100 transition duration-150">Player ID <span id="sort-icon-playerNumber" class="text-gray-300">↕</span></th>
+                            <th onclick="toggleSort('evaluator')" class="py-3 px-4 cursor-pointer hover:bg-gray-100 transition duration-150">Scout <span id="sort-icon-evaluator" class="text-gray-300">↕</span></th>
+                            <th onclick="toggleSort('rating')" class="py-3 px-4 text-center cursor-pointer hover:bg-gray-100 transition duration-150">Rating <span id="sort-icon-rating" class="text-gray-300">↕</span></th>
+                            <th class="py-3 px-4 max-w-xs text-center">Sub Rating</th>
+                            <th class="py-3 px-4 max-w-xs">Scouting Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="master-table-body" class="divide-y divide-gray-100 text-sm font-medium text-gray-700"></tbody>
+                </table>
+            </div>
+        </main>
+    </template>
 
-  </div>
+    <script type="module">	
+        import { db } from "./firebase-config.js";
+        import { collection, onSnapshot, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";			
 
-  <!-- Firebase & Page Integration Script -->
-  <script type="module">
-    import { db } from './firebase-config.js';
-    import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        let globalEvaluationsList = [];
+        let selectedPlayerIds = new Set();
+        let currentSortColumn = 'timestampRaw';
+        let isAscending = false;
+        let savedPasscodeHash = null;
+        let isInitialLoad = true;
 
-debugger;
-    // 1. Gatekeeper Check
-    //const authCode = localStorage.getItem('top16_auth_code');
-    //const authCode = sessionStorage.getItem('admin_scout_name');	
-    //if (!authCode) {
-//      window.location.href = 'index.html';
-    //}
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
-    let loadedPlayers = [];
+        async function fetchGatekeeperSecret() {
+            try {
+                const secretDocRef = doc(db, "secrets", "gatekeeper");
+                const secretSnap = await getDoc(secretDocRef);
+                if (secretSnap.exists()) {
+                    savedPasscodeHash = secretSnap.data().adminPasscodeHash;
+                    const savedName = sessionStorage.getItem('admin_scout_name');
+                    if (sessionStorage.getItem('admin_authorized') === 'true' && savedName) {
+                        bypassGatekeeperUI(savedName);
+                        initializeDataStream();
+                    }
+                }
+            } catch (err) {
+                console.error("Firestore Security Retrieval Error:", err);
+            }
+        }
+        fetchGatekeeperSecret();
 
-    // 2. Real-time Firestore Listener
-    const selectEl = document.getElementById("playerSelect");
-    
-    onSnapshot(collection(db, "players"), (snapshot) => {
-      loadedPlayers = [];
-      snapshot.forEach(doc => {
-        loadedPlayers.push({ id: doc.id, ...doc.data() });
-      });
+        window.verifyAdminPasscode = async function(event) {
+            event.preventDefault();
+            const nameField = document.getElementById('gatekeeper-scout-name');
+            const passcodeField = document.getElementById('gatekeeper-passcode-input');
+            const errorElement = document.getElementById('gatekeeper-error-msg');
+            
+            if (!savedPasscodeHash) {
+                alert("Security config loading... Please try again.");
+                return;
+            }
 
-      // Sort alphabetically by name
-      loadedPlayers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            const cleanName = nameField.value.trim();
+            const inputHash = await sha256(passcodeField.value);
 
-      populateDropdown(loadedPlayers);
+            if (inputHash === savedPasscodeHash) {
+                sessionStorage.setItem('admin_authorized', 'true');
+                sessionStorage.setItem('admin_scout_name', cleanName);
+                bypassGatekeeperUI(cleanName);
+                initializeDataStream();
+            } else {
+                errorElement.classList.remove('hidden');
+                passcodeField.value = '';
+                passcodeField.focus();
+            }
+        }
 
-      // Preserve selected player or default to first
-      const currentSelectedId = selectEl.value;
-      if (currentSelectedId && loadedPlayers.some(p => p.id === currentSelectedId)) {
-        renderPlayerView(currentSelectedId);
-      } else if (loadedPlayers.length > 0) {
-        selectEl.value = loadedPlayers[0].id;
-        renderPlayerView(loadedPlayers[0].id);
-      }
-    }, (error) => {
-      console.error("Firestore access error:", error);
-    });
+        function bypassGatekeeperUI(adminName) {
+            document.getElementById('gatekeeper-modal').classList.add('hidden');
+            document.getElementById('active-admin-display').textContent = adminName;
+            document.getElementById('admin-content-blur-wrapper').classList.remove('blur-sm', 'pointer-events-none');
+        }
 
-    selectEl.addEventListener("change", (e) => {
-      renderPlayerView(e.target.value);
-    });
+        function initializeDataStream() {
+            const evaluationsCollection = collection(db, 'evaluations');
+            const q = query(evaluationsCollection, orderBy('timestamp', 'desc'));
 
-    function populateDropdown(players) {
-      if (players.length === 0) {
-        selectEl.innerHTML = `<option value="">No players found</option>`;
-        return;
-      }
-      selectEl.innerHTML = players.map(p => 
-        `<option value="${p.id}">${p.name || 'Unnamed'} ${p.squadNumber ? '(#' + p.squadNumber + ')' : ''}</option>`
-      ).join("");
-    }
+            onSnapshot(q, (snapshot) => {
+                globalEvaluationsList = [];
+                snapshot.forEach((doc) => {
+                    const item = doc.data();
+                    let rawTime = item.timestamp ? item.timestamp.toDate().getTime() : 0;
+                    let dateString = "---";
+                    if (item.timestamp) {
+                        const jsDate = item.timestamp.toDate();
+                        dateString = jsDate.toLocaleDateString() + ' ' + jsDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
 
-    function renderPlayerView(playerId) {
-      const player = loadedPlayers.find(p => p.id === playerId);
-      if (!player) return;
+                    globalEvaluationsList.push({
+                        id: doc.id,
+                        timestamp: dateString,
+                        timestampRaw: rawTime,
+                        playerNumber: item.playerNumber || 0,
+                        evaluator: item.evaluator || "Anonymous",
+                        rating: item.rating || 0,
+                        subRating: item.subRating || "",
+                        headlineText: item.headlineText || "",
+                        notes: item.notes || ""
+                    });
+                });
 
-      const logs = player.logs || [];
-      const totalLogs = logs.length;
+                calculateMetrics();
+                
+				isInitialLoad = false;
+                if (isInitialLoad) {
+                    const uniquePlayers = [...new Set(globalEvaluationsList.map(item => item.playerNumber))];
+                    uniquePlayers.forEach(id => selectedPlayerIds.add(id.toString()));
+                    isInitialLoad = false;
+                }
 
-      if (totalLogs === 0) {
-        document.getElementById("playerName").textContent = player.name || "Unnamed Player";
-        document.getElementById("playerMeta").innerHTML = `<span>No evaluation logs recorded yet.</span>`;
-        document.getElementById("statAvgRating").textContent = "-";
-        document.getElementById("statSubRating").textContent = "-";
-        document.getElementById("statSentiment").textContent = "-";
-        document.getElementById("statTotalLogs").textContent = "0";
-        document.getElementById("statValueIndex").textContent = "-";
-        document.getElementById("auditTableBody").innerHTML = `
-          <tr><td colspan="6" class="py-8 text-center text-slate-500">No evaluations found for this player.</td></tr>
-        `;
-        document.getElementById("auditTableFooter").innerHTML = "";
-        return;
-      }
+                renderPlayerCheckboxes();
+                applyFiltersAndSort();
+            });
+        }
 
-      // Calculations
-      const avgPrimary = logs.reduce((acc, l) => acc + (Number(l.primary) || 0), 0) / totalLogs;
-      
-      const subLogs = logs.filter(l => l.sub !== null && l.sub !== undefined && l.sub !== "");
-      const avgSub = subLogs.length > 0 
-        ? subLogs.reduce((acc, l) => acc + Number(l.sub), 0) / subLogs.length 
-        : null;
+        function calculateMetrics() {
+            const uniquePlayers = new Set();
+            const uniqueScouts = new Set();
+            globalEvaluationsList.forEach(item => {
+                if(item.playerNumber) uniquePlayers.add(item.playerNumber);
+                uniqueScouts.add(item.evaluator.trim().toLowerCase());
+            });
 
-      const avgSentiment = logs.reduce((acc, l) => acc + (Number(l.sentiment) || 0), 0) / totalLogs;
+            document.getElementById('stat-total-evals').textContent = globalEvaluationsList.length;
+            document.getElementById('stat-unique-players').textContent = uniquePlayers.size;
+            document.getElementById('stat-total-scouts').textContent = uniqueScouts.size;
+        }
 
-      // Dynamic Weighting Calculation
-      let ratingComponent = 0;
-      if (avgSub !== null) {
-        ratingComponent = (avgPrimary * 1.0) + (avgSub * 0.5);
-      } else {
-        ratingComponent = avgPrimary * 1.5;
-      }
+        function renderPlayerCheckboxes() {
+            const grid = document.getElementById('player-checkbox-grid');
+            const uniquePlayers = [...new Set(globalEvaluationsList.map(item => item.playerNumber))].sort((a,b) => a - b);
 
-      const valueIndex = ratingComponent - (avgSentiment * 0.25) - Math.log(totalLogs + 1);
+            if (uniquePlayers.length === 0) {
+                grid.innerHTML = `<span class="text-xs text-gray-400 col-span-full italic">No player evaluations recorded yet.</span>`;
+                return;
+            }
 
-      // Render Header Details
-      document.getElementById("playerName").textContent = player.name || "Unnamed Player";
-      document.getElementById("playerMeta").innerHTML = `
-        <span class="bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full text-xs font-medium border border-slate-700">${player.position || 'N/A'}</span>
-        <span>Squad #${player.squadNumber || 'N/A'}</span>
-      `;
+            grid.innerHTML = uniquePlayers.map(id => {
+                const isChecked = selectedPlayerIds.has(id.toString()) ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-400 transition cursor-pointer select-none text-xs font-bold text-gray-700">
+                        <input type="checkbox" value="${id}" ${isChecked} onchange="togglePlayerSelection('${id}')" class="rounded text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5">
+                        #${id}
+                    </label>
+                `;
+            }).join('');
+        }
 
-      document.getElementById("statAvgRating").textContent = avgPrimary.toFixed(2);
-      document.getElementById("statSubRating").innerHTML = avgSub !== null 
-        ? avgSub.toFixed(2) 
-        : `<span class="text-xs text-slate-500 font-normal">N/A</span>`;
-      
-      const sentimentColor = avgSentiment >= 0 ? "text-emerald-400" : "text-amber-400";
-      document.getElementById("statSentiment").className = `text-xl font-extrabold mt-1 block ${sentimentColor}`;
-      document.getElementById("statSentiment").textContent = (avgSentiment > 0 ? "+" : "") + avgSentiment.toFixed(2);
+        window.togglePlayerSelection = function(playerId) {
+            const strId = playerId.toString();
+            if (selectedPlayerIds.has(strId)) {
+                selectedPlayerIds.delete(strId);
+            } else {
+                selectedPlayerIds.add(strId);
+            }
+            applyFiltersAndSort();
+        }
 
-      document.getElementById("statTotalLogs").textContent = totalLogs;
-      document.getElementById("statValueIndex").textContent = valueIndex.toFixed(3);
-      document.getElementById("logCountBadge").textContent = `${totalLogs} Logs`;
+        window.selectAllPlayers = function(shouldSelectAll) {
+            selectedPlayerIds.clear();
+            if (shouldSelectAll) {
+                globalEvaluationsList.forEach(item => {
+                    if (item.playerNumber) {
+                        selectedPlayerIds.add(item.playerNumber.toString());
+                    }
+                });
+            }
+            renderPlayerCheckboxes();
+            applyFiltersAndSort();
+        }
 
-      // Render Table Rows
-      const tbody = document.getElementById("auditTableBody");
-      tbody.innerHTML = logs.map(log => {
-        const subBadge = (log.sub !== null && log.sub !== undefined && log.sub !== "")
-          ? `<span class="bg-slate-800 text-slate-200 border border-slate-700 font-mono px-2 py-0.5 rounded text-xs">${Number(log.sub).toFixed(1)}</span>`
-          : `<span class="text-slate-600">—</span>`;
+        window.toggleSort = function(columnName) {
+            if (currentSortColumn === columnName) {
+                isAscending = !isAscending;
+            } else {
+                currentSortColumn = columnName;
+                isAscending = true;
+            }
+            applyFiltersAndSort();
+        }
 
-        const sentVal = Number(log.sentiment) || 0;
-        const sentBadge = sentVal >= 0
-          ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono px-2 py-0.5 rounded text-xs">+${sentVal.toFixed(1)}</span>`
-          : `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono px-2 py-0.5 rounded text-xs">${sentVal.toFixed(1)}</span>`;
+        window.applyFiltersAndSort = function() {
+            const container = document.getElementById('dashboard-view-container');
+            if (!container) return;
+            container.innerHTML = '';
 
-        return `
-          <tr class="hover:bg-slate-800/40 transition-colors">
-            <td class="py-3 px-4 font-mono text-xs text-slate-400">${log.date || '—'}</td>
-            <td class="py-3 px-4 font-medium text-white">${log.scout || 'Scout'}</td>
-            <td class="py-3 px-4 text-center font-mono font-semibold text-white">${Number(log.primary || 0).toFixed(1)}</td>
-            <td class="py-3 px-4 text-center">${subBadge}</td>
-            <td class="py-3 px-4 text-center">${sentBadge}</td>
-            <td class="py-3 px-4 text-slate-300">${log.notes || ''}</td>
-          </tr>
-        `;
-      }).join("");
+            let processedList = globalEvaluationsList.filter(item => selectedPlayerIds.has(item.playerNumber.toString()));
 
-      // Render Table Footer
-      document.getElementById("auditTableFooter").innerHTML = `
-        <td colspan="2" class="py-3 px-4 text-slate-400 uppercase text-xs tracking-wider">Averages / Totals</td>
-        <td class="py-3 px-4 text-center font-mono">${avgPrimary.toFixed(2)}</td>
-        <td class="py-3 px-4 text-center font-mono">${avgSub !== null ? avgSub.toFixed(2) : "—"}</td>
-        <td class="py-3 px-4 text-center font-mono">${(avgSentiment > 0 ? "+" : "") + avgSentiment.toFixed(2)}</td>
-        <td class="py-3 px-4 text-xs text-slate-400 font-normal">Calculated across ${totalLogs} scout evaluations</td>
-      `;
-    }
-  </script>
+            processedList.sort((a, b) => {
+                let valA = a[currentSortColumn];
+                let valB = b[currentSortColumn];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return isAscending ? -1 : 1;
+                if (valA > valB) return isAscending ? 1 : -1;
+                return 0;
+            });
+
+            renderFlatSpreadsheet(container, processedList);
+            updateSortIcons();
+        }
+
+        function renderFlatSpreadsheet(targetContainer, dataset) {
+            const template = document.getElementById('spreadsheet-template').content.cloneNode(true);
+            const tbody = template.getElementById('master-table-body');
+            const rowCount = template.getElementById('preview-row-count');
+
+            if (rowCount) rowCount.textContent = `${dataset.length} records active for export`;
+
+            if (dataset.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400 italic">No evaluations found for selected players.</td></tr>`;
+                targetContainer.appendChild(template);
+                return;
+            }
+
+            dataset.forEach(item => {
+                tbody.appendChild(createRowElement(item));
+            });
+            targetContainer.appendChild(template);
+        }
+
+        function createRowElement(item) {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-gray-50/70 transition-colors";
+
+            let ratingBadge = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+            if(item.rating === 2) ratingBadge = "bg-amber-50 text-amber-700 border border-amber-200";
+            if(item.rating === 3) ratingBadge = "bg-rose-50 text-rose-700 border border-rose-200";
+
+            tr.innerHTML = `
+                <td class="py-3 px-4 text-xs text-gray-400 font-mono font-normal">${item.timestamp}</td>
+                <td class="py-3 px-4 font-black text-gray-900">#${item.playerNumber}</td>
+                <td class="py-3 px-4 text-gray-600">${item.evaluator}</td>
+                <td class="py-3 px-4 text-center">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${ratingBadge}">${item.rating}</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${ratingBadge}">${item.subRating ? item.subRating : '—'}</span>
+                </td>
+                <td class="py-3 px-4 text-xs text-gray-500 max-w-xs truncate font-normal" title="${item.notes.replace(/"/g, '&quot;')}">
+                    ${item.notes ? item.notes : '<span class="italic text-gray-300 font-normal">No technical logs compiled</span>'}
+                </td>
+            `;
+            return tr;
+        }
+
+        function updateSortIcons() {
+            const columns = ['timestampRaw', 'playerNumber', 'evaluator', 'rating'];
+            columns.forEach(col => {
+                const iconElement = document.getElementById(`sort-icon-${col}`);
+                if (!iconElement) return;
+                
+                if (col === currentSortColumn) {
+                    iconElement.textContent = isAscending ? "▲" : "▼";
+                    iconElement.className = "text-emerald-600 font-black";
+                } else {
+                    iconElement.textContent = "↕";
+                    iconElement.className = "text-gray-300 font-normal";
+                }
+            });
+        }
+
+window.exportToPDF = async function() {
+            const filteredEvals = globalEvaluationsList.filter(item => selectedPlayerIds.has(item.playerNumber.toString()));
+
+            if (filteredEvals.length === 0) {
+                alert("Please select at least one player with evaluations to export.");
+                return;
+            }
+
+            const groupedByPlayer = {};
+            filteredEvals.forEach(ev => {
+                if (!groupedByPlayer[ev.playerNumber]) {
+                    groupedByPlayer[ev.playerNumber] = [];
+                }
+                groupedByPlayer[ev.playerNumber].push(ev);
+            });
+
+            const pdfContainer = document.getElementById('pdf-export-container');
+            const sortedPlayerIds = Object.keys(groupedByPlayer).sort((a, b) => Number(a) - Number(b));
+
+            let pdfHTML = `
+                <div style="font-family: Arial, sans-serif; padding: 10px;">
+                    <div style="border-bottom: 2px solid #10b981; padding-bottom: 12px; margin-bottom: 24px;">
+                        <h1 style="font-size: 24px; font-weight: 900; color: #111827; margin: 0;">Top16 Scouting Report</h1>
+                        <p style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                            Generated on: ${new Date().toLocaleDateString()} | Total Players Included: ${sortedPlayerIds.length}
+                        </p>
+                    </div>
+            `;
+
+            sortedPlayerIds.forEach(playerId => {
+                const playerEvals = groupedByPlayer[playerId];
+                pdfHTML += `
+                    <div style="margin-bottom: 28px; page-break-inside: avoid;">
+                        <div style="background-color: #f8fafc; padding: 10px 14px; border-left: 4px solid #10b981; border-radius: 6px; margin-bottom: 10px;">
+                            <h2 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Player #${playerId}</h2>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 600;">Total Evaluations: ${playerEvals.length}</span>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+                            <thead>
+                                <tr style="background-color: #f1f5f9; border-bottom: 1px solid #cbd5e1; color: #475569; font-size: 9px; text-transform: uppercase;">
+                                    <th style="padding: 6px 8px; width: 22%;">Date/Time</th>
+                                    <th style="padding: 6px 8px; width: 18%;">Scout</th>
+                                    <th style="padding: 6px 8px; text-align: center; width: 10%;">Rating</th>
+                                    <th style="padding: 6px 8px; text-align: center; width: 12%;">Sub-Rating</th>
+                                    <th style="padding: 6px 8px; width: 38%;">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                playerEvals.forEach(ev => {
+                    pdfHTML += `
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 6px 8px; color: #64748b; font-size: 10px;">${ev.timestamp}</td>
+                            <td style="padding: 6px 8px; font-weight: 600; color: #334155;">${ev.evaluator}</td>
+                            <td style="padding: 6px 8px; text-align: center; font-weight: 800; color: #059669;">${ev.rating}</td>
+                            <td style="padding: 6px 8px; text-align: center; font-weight: 700; color: #4b5563;">${ev.subRating || '—'}</td>
+                            <td style="padding: 6px 8px; color: #334155;">${ev.notes ? ev.notes : '<span style="color:#9ca3af; font-style:italic;">No notes</span>'}</td>
+                        </tr>
+                    `;
+                });
+
+                pdfHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+
+            pdfHTML += `</div>`;
+            pdfContainer.innerHTML = pdfHTML;
+
+            const opt = {
+                margin:       0.4,
+                filename:     `Top16_Evaluations_Report_${new Date().toISOString().slice(0,10)}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(pdfContainer).save();
+            } catch (err) {
+                console.error("PDF Export Error:", err);
+                alert("Failed to export PDF. Check browser console for details.");
+            }
+        };
+
+        window.exportToExcel = function() {
+            const exportData = globalEvaluationsList.filter(item => selectedPlayerIds.has(item.playerNumber.toString()));
+
+            if (exportData.length === 0) {
+                alert("There is no evaluation data available for selected players.");
+                return;
+            }
+
+            const headers = ["Timestamp", "Player Jersey Number", "Evaluator Scout", "Rating Score", "SubRating", "Scouting Notes"];
+            const rows = exportData.map(item => [
+                item.timestamp,
+                item.playerNumber,
+                item.evaluator,
+                item.rating,
+                item.subRating,
+                `"${item.notes.replace(/"/g, '""')}"`
+            ]);
+            const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.createElement("a");
+            downloadLink.setAttribute("href", url);
+            downloadLink.setAttribute("download", `Top16_Master_Evaluations_Export_${new Date().toISOString().slice(0,10)}.csv`);
+            downloadLink.style.visibility = 'hidden';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        };
+
+        window.handleAdminLogout = function() {
+            if (confirm("Are you sure you want to log out of the session?")) {
+                sessionStorage.clear();
+                window.location.replace('admin.html');
+            }
+        };
+    </script>
 </body>
 </html>
